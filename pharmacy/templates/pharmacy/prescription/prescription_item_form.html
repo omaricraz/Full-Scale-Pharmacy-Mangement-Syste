@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+    }
+
+    .prescription-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    .form-text {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+        color: var(--error-color);
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: var(--error-color);
+    }
+
+    .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-check-input {
+        width: 1.1em;
+        height: 1.1em;
+        margin-top: 0;
+        accent-color: var(--accent-color);
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .form-check-label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .prescription-form-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: span 1;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="prescription-form-container">
+    <div class="form-header">
+        <h2 class="form-title">{{ title }}</h2>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <div class="form-group full-width">
+                <label for="id_product">Product</label>
+                {{ form.product }}
+                {{ form.product.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_quantity">Quantity</label>
+                {{ form.quantity }}
+                {{ form.quantity.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_dosage">Dosage</label>
+                {{ form.dosage }}
+                {{ form.dosage.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_duration">Duration</label>
+                {{ form.duration }}
+                {{ form.duration.errors }}
+            </div>
+            <div class="form-group"></div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full-width">
+                <label for="id_instructions">Instructions</label>
+                {{ form.instructions }}
+                {{ form.instructions.errors }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'prescription_detail' pk=prescription.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Select2 for Product field
+        $('#id_product').select2({
+            placeholder: "Select a product",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('.prescription-form-container')
+        });
+
+        // Styling select2 focus
+        $('#id_product').on('select2:open', function () {
+            $('.select2-search__field').attr('placeholder', 'Search products...');
+            $('.select2-container--open .select2-selection--single').css({
+                'border-color': '#2ec8a6',
+                'box-shadow': '0 0 0 2px rgba(46, 200, 166, 0.2)'
+            });
+        });
+
+        $('#id_product').on('select2:close', function () {
+            $('.select2-selection--single').css({
+                'border-color': '#1e293b',
+                'box-shadow': 'none'
+            });
+        });
+
+        // Set placeholders dynamically
+        document.getElementById('id_quantity').placeholder = 'Enter quantity (e.g., 2)';
+        document.getElementById('id_dosage').placeholder = 'e.g., 1 tablet every 8 hours';
+        document.getElementById('id_duration').placeholder = 'e.g., 7 days';
+        document.getElementById('id_instructions').placeholder = 'Special instructions (e.g., after meals)';
+    });
+</script>
+{% endblock %}

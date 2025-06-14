@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Select Bill for Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Select Bill for Payment</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Total Amount</th>
+                        <th>Amount Due</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for billing in billings %}
+                    <tr>
+                        <td>{{ billing.invoice_number }}</td>
+                        <td>{{ billing.patient }}</td>
+                        <td>{{ billing.date }}</td>
+                        <td>{{ billing.total_amount }}</td>
+                        <td>{{ billing.amount_due }}</td>
+                        <td>
+                            <a href="{% url 'payment_create' billing.pk %}" class="btn btn-sm btn-primary">
+                                Add Payment
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No bills available for payment.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

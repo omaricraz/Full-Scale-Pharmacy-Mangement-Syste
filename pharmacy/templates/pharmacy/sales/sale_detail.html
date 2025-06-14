@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+{% block title %}Sale #{{ sale.invoice_number }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --danger-color: #ff6b6b;
+        --info-color: #3b82f6;
+        --inactive-color: #64748b;
+        --style-note-color: #a855f7;
+    }
+
+    .sale-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .sale-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sale-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-outline:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .btn-danger {
+        background-color: transparent;
+        border: 1px solid var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: rgba(255, 107, 107, 0.1);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .patient-link {
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .patient-link:hover {
+        color: #25a38a;
+        text-decoration: underline;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+
+    .badge-success {
+        background-color: rgba(46, 200, 166, 0.2);
+        color: var(--success-color);
+    }
+
+    .badge-warning {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: var(--warning-color);
+    }
+
+    .badge-info {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--info-color);
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .summary-item {
+        text-align: right;
+    }
+
+    .summary-total {
+        font-weight: 600;
+        color: var(--accent-color);
+        font-size: 1.1rem;
+    }
+
+    .items-section {
+        padding: 0 1.5rem 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .sale-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .sale-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sale-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .sale-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sale-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .notes-section {
+        padding: 0 1.5rem 1.5rem;
+    }
+
+    .notes-content {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        color: var(--text-primary);
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .style-note-content {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        color: var(--text-primary);
+        border-left: 3px solid var(--style-note-color);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .payment-method {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .payment-icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .style-note-icon {
+        color: var(--style-note-color);
+        margin-right: 8px;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .sale-container, .sale-container * {
+            visibility: visible;
+        }
+        .sale-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none;
+            box-shadow: none;
+            background-color: white;
+            color: black;
+        }
+        .no-print {
+            display: none !important;
+        }
+        a {
+            text-decoration: none;
+            color: black !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sale-container">
+    <div class="sale-header">
+        <h1 class="sale-title">Sale #{{ sale.invoice_number }}</h1>
+        <div class="action-buttons no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                    <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                </svg>
+                Print Invoice
+            </button>
+            <a href="{% url 'sale_list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Sales
+            </a>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Sale Information</h3>
+            <div class="info-item">
+                <div class="info-label">Date</div>
+                <div class="info-value">{{ sale.date|date:"Y-m-d H:i" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Cashier</div>
+                <div class="info-value">{{ sale.created_by.get_full_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Payment Method</div>
+                <div class="info-value payment-method">
+                    <span class="payment-icon">
+                        {% if sale.payment_method == 'cash' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M3 6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6zM0 8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H3a3 3 0 0 0-3 3v2z"/>
+                        </svg>
+                        {% elif sale.payment_method == 'card' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z"/>
+                            <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/>
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 1a5 5 0 0 0-5 5v1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a6 6 0 1 1 12 0v6a2.5 2.5 0 0 1-2.5 2.5H9.366a1 1 0 0 1-.866.5h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 .866.5H11.5A1.5 1.5 0 0 0 13 12h-1a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h1V6a5 5 0 0 0-5-5z"/>
+                        </svg>
+                        {% endif %}
+                    </span>
+                    {{ sale.get_payment_method_display }}
+                </div>
+            </div>
+            {% if sale.patient %}
+            <div class="info-item">
+                <div class="info-label">Patient</div>
+                <div class="info-value">
+                    <a href="#" class="patient-link">
+                        {{ sale.patient.first_name }} {{ sale.patient.last_name }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info-card">
+            <h3 class="info-title">Financial Summary</h3>
+            <div class="summary-grid">
+                <div>
+                    <div class="info-label">Subtotal</div>
+                    <div class="info-label">Tax Amount</div>
+                    <div class="info-label">Discount</div>
+                    <div class="info-label">Total Amount</div>
+                </div>
+                <div class="summary-item">
+                    <div class="info-value">{{ sale.subtotal }}</div>
+                    <div class="info-value">{{ sale.tax_amount }}</div>
+                    <div class="info-value">{{ sale.discount_amount }}</div>
+                    <div class="info-value summary-total">{{ sale.total_amount }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="items-section">
+        <h3 class="section-title">Items Sold</h3>
+        <div class="table-responsive">
+            <table class="sale-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Discount</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.name }}</td>
+                        <td>
+                            {% if item.batch %}
+                                {{ item.batch.batch_number }} (Exp: {{ item.batch.expiry_date|date:"Y-m-d" }})
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price }}</td>
+                        <td>{{ item.discount }}</td>
+                        <td>{{ item.total_price }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">No items found in this sale</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if sale.notes %}
+    <div class="notes-section">
+        <h3 class="section-title">
+            Notes
+        </h3>
+        <div class="notes-content">
+            {{ sale.notes }}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <div class="sale-header no-print">
+        <div></div>
+        <div class="action-buttons">
+            <a href="{% url 'sale_list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Sales
+            </a>
+            <a href="{% url 'sale_delete' pk=sale.pk %}" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+                Delete Sale
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

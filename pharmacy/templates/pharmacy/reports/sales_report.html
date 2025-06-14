@@ -1,0 +1,692 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sales Report{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #1e293b;
+        
+        /* Status Colors */
+        --danger-color: #ff6b6b;
+        --warning-color: #f59e0b;
+        --success-color: #10b981;
+        --info-color: #3b82f6;
+        --purple-color: #8b5cf6;
+    }
+
+    .report-container {
+        background-color: var(--bg-secondary);
+        padding: 2rem;
+        min-height: 100vh;
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .report-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-outline:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .btn-outline-secondary {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline-secondary:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+    }
+
+    .btn-print {
+        background-color: transparent;
+        border: 1px solid #3a86ff;
+        color: #3a86ff;
+    }
+
+    .btn-print:hover {
+        background-color: rgba(58, 134, 255, 0.1);
+    }
+
+    .filters-container {
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(46, 200, 166, 0.2);
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card-title {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-card-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .report-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .report-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .report-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .report-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Payment Method Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 6px;
+    }
+
+    .badge-cash {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+    }
+
+    .badge-card {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: var(--info-color);
+    }
+
+    .badge-mobile {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: var(--warning-color);
+    }
+
+    .badge-insurance {
+        background-color: rgba(139, 92, 246, 0.15);
+        color: var(--purple-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .report-results {
+        display: none;
+    }
+
+    .report-generated .report-results {
+        display: block;
+    }
+
+    .report-date {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .chart-container {
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 400px;
+    }
+
+    .trend-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .trend-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .report-container, .report-container * {
+            visibility: visible;
+        }
+        .report-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 0;
+            background-color: white;
+            color: black;
+        }
+        .filters-container, .btn {
+            display: none;
+        }
+        .report-table {
+            box-shadow: none;
+            border-radius: 0;
+        }
+        .report-table thead th {
+            color: black;
+            background-color: #f1f1f1 !important;
+        }
+        .report-table tbody td {
+            color: black;
+        }
+        .chart-container {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .report-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+        .report-table {
+            display: block;
+            overflow-x: auto;
+        }
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="report-container {% if request.GET.generate %}report-generated{% endif %}">
+    <div class="report-header">
+        <h1 class="report-title">Sales Report</h1>
+        <div class="report-date">{% if request.GET.generate %}Report Date: {{ report_date|date:"F d, Y" }}{% else %}Select date range to generate report{% endif %}</div>
+    </div>
+
+    <div class="filters-container">
+        <form method="get" class="filter-form" id="reportForm">
+            <input type="hidden" name="generate" value="1">
+            <div class="form-group">
+                <label for="start_date" class="form-label">From Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" 
+                       value="{{ request.GET.start_date }}" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date" class="form-label">To Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" 
+                       value="{{ request.GET.end_date }}" required>
+            </div>
+            <div class="form-group">
+                <label for="payment_method" class="form-label">Payment Method</label>
+                <select name="payment_method" id="payment_method" class="form-select">
+                    <option value="">All Methods</option>
+                    <option value="cash" {% if request.GET.payment_method == "cash" %}selected{% endif %}>Cash</option>
+                    <option value="card" {% if request.GET.payment_method == "card" %}selected{% endif %}>Card</option>
+                    <option value="mobile" {% if request.GET.payment_method == "mobile" %}selected{% endif %}>Mobile</option>
+                    <option value="insurance" {% if request.GET.payment_method == "insurance" %}selected{% endif %}>Insurance</option>
+                </select>
+            </div>
+            <div class="form-group d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="mr-1">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                    </svg>
+                    Generate
+                </button>
+                {% if request.GET.generate %}
+                <button type="submit" name="export" value="csv" class="btn btn-outline">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="mr-1">
+                        <path d="M8.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-1A1.5 1.5 0 0 0 7 1.5v1H2.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H11z"/>
+                    </svg>
+                    Ex CSV
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="report-results">
+        {% if request.GET.generate %}
+            {% if sales %}
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="summary-card-title">Total Revenue</div>
+                    <div class="summary-card-value">${{ total_revenue|floatformat:2 }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Total Transactions</div>
+                    <div class="summary-card-value">{{ total_transactions }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Average Order Value</div>
+                    <div class="summary-card-value">${{ average_order_value|floatformat:2 }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Highest Sale</div>
+                    <div class="summary-card-value">${{ highest_sale|floatformat:2 }}</div>
+                </div>
+            </div>
+
+            <div class="trend-container">
+                <div class="chart-container">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="paymentMethodChart"></canvas>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button onclick="window.print()" class="btn btn-print">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    </svg>
+                    Print Report
+                </button>
+                <a href="{% url 'sales_report' %}" class="btn btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="mr-1">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                    Clear
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Payment Method</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.invoice_number }}</td>
+                            <td>{{ sale.date|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if sale.patient %}
+                                    {{ sale.patient.first_name }} {{ sale.patient.last_name }}
+                                {% else %}
+                                    Walk-in Customer
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if sale.payment_method == 'cash' %}badge-cash
+                                    {% elif sale.payment_method == 'card' %}badge-card
+                                    {% elif sale.payment_method == 'mobile' %}badge-mobile
+                                    {% else %}badge-insurance{% endif %}">
+                                    {{ sale.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td>{{ sale.items.count }}</td>
+                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-container mt-4">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No sales records found for the selected criteria.
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16" class="mb-3">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            <h3>No Report Generated</h3>
+            <p>Select a date range and click "Generate Report" to view sales data</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default dates
+        const endDateEl = document.getElementById('end_date');
+        const startDateEl = document.getElementById('start_date');
+        
+        if (!endDateEl.value) {
+            const today = new Date().toISOString().split('T')[0];
+            endDateEl.value = today;
+        }
+        
+        if (!startDateEl.value) {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            startDateEl.value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+
+        // Validate date range
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            const startDate = new Date(startDateEl.value);
+            const endDate = new Date(endDateEl.value);
+            
+            if (startDate > endDate) {
+                alert('End date must be after start date');
+                e.preventDefault();
+            }
+        });
+
+        // If coming back with generated report, scroll to results
+        if (document.querySelector('.report-generated')) {
+            setTimeout(() => {
+                document.querySelector('.report-results').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 300);
+        }
+
+        // Initialize charts if report is generated
+        {% if request.GET.generate and sales %}
+            // Sales Trend Chart
+            const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
+            const salesTrendChart = new Chart(salesTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: [{% for day in sales %}'{{ day.day|date:"M d" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: [{% for day in sales %}{{ day.total_sales }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                        borderColor: '#2ec8a6',
+                        backgroundColor: 'rgba(46, 200, 166, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Sales Trend',
+                            color: '#f8fafc',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#f8fafc'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(30, 41, 59, 0.5)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(30, 41, 59, 0.5)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Payment Method Chart
+            const paymentMethodCtx = document.getElementById('paymentMethodChart').getContext('2d');
+            const paymentMethodChart = new Chart(paymentMethodCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for method in payment_methods %}'{{ method.payment_method|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                    datasets: [{
+                        data: [{% for method in payment_methods %}{{ method.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(139, 92, 246, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Payment Methods',
+                            color: '#f8fafc',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#f8fafc'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Top Products Chart (if top_products data is available)
+            {% if top_products %}
+            const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+            const topProductsChart = new Chart(topProductsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [{% for product in top_products %}'{{ product.product__name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [{% for product in top_products %}{{ product.total_revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                        backgroundColor: 'rgba(46, 200, 166, 0.7)',
+                        borderColor: 'rgba(46, 200, 166, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top Selling Products',
+                            color: '#f8fafc',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(30, 41, 59, 0.5)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(30, 41, 59, 0.5)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+            {% endif %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

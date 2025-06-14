@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+
+{% block title %}Expiry Report{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+
+    .report-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .report-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .report-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .report-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .report-meta {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-card {
+        background-color: var(--bg-secondary);
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        min-width: 200px;
+        text-align: center;
+    }
+
+    .meta-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .meta-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+    }
+
+    .badge-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--error-color);
+        border: 1px solid var(--error-color);
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: var(--bg-secondary);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .report-table thead {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .report-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+        color: var(--accent-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .report-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .report-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .report-table tr:hover td {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .days-remaining {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+
+    .days-remaining.warning {
+        color: var(--warning-color);
+    }
+
+    .days-remaining.danger {
+        color: var(--error-color);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .print-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-primary {
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--accent-color);
+        color: var(--bg-primary);
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--text-secondary);
+        color: var(--bg-primary);
+    }
+
+    /* Print-specific styles */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+        }
+
+        body {
+            background-color: white !important;
+            color: #333 !important;
+            font-size: 12pt;
+        }
+        
+        .print-actions {
+            display: none !important;
+        }
+        
+        .report-container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .report-header {
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        
+        .report-title {
+            color: #222 !important;
+            font-size: 1.5rem !important;
+        }
+        
+        .report-subtitle {
+            color: #666 !important;
+        }
+        
+        .report-meta {
+            justify-content: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .meta-card {
+            background-color: transparent !important;
+            border: 1px solid #ddd;
+            min-width: 150px;
+            padding: 0.5rem 1rem;
+        }
+        
+        .meta-label {
+            color: #666 !important;
+        }
+        
+        .meta-value {
+            color: #222 !important;
+        }
+        
+        .section-title {
+            color: #222 !important;
+            font-size: 1.2rem !important;
+            margin: 1rem 0 0.5rem !important;
+            page-break-after: avoid;
+        }
+        
+        .report-table {
+            background-color: transparent !important;
+            border: 1px solid #ddd !important;
+            page-break-inside: avoid;
+        }
+        
+        .report-table th {
+            color: #222 !important;
+            background-color: #f5f5f5 !important;
+        }
+        
+        .report-table td {
+            color: #333 !important;
+            border-color: #ddd !important;
+        }
+        
+        .status-badge {
+            color: #fff !important;
+            border: none !important;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color) !important;
+        }
+        
+        .badge-danger {
+            background-color: var(--error-color) !important;
+        }
+        
+        .days-remaining.warning {
+            color: var(--warning-color) !important;
+        }
+        
+        .days-remaining.danger {
+            color: var(--error-color) !important;
+        }
+        
+        a[href]:after {
+            content: none !important;
+        }
+        
+        .empty-state svg {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .report-meta {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .report-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .print-actions {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="report-container">
+    <div class="print-actions">
+        <button onclick="window.print()" class="btn btn-outline-primary">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print Report
+        </button>
+        <button id="export-csv" class="btn btn-outline-secondary">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export CSV
+        </button>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="report-header">
+        <h1 class="report-title">Pharmacy Expiry Report</h1>
+        <p class="report-subtitle">Inventory items expiring soon or already expired - Generated on {{ report_date|date:"F j, Y" }}</p>
+        
+        <div class="report-meta">
+            <div class="meta-card">
+                <div class="meta-label">Report Date</div>
+                <div class="meta-value">{{ report_date|date:"F j, Y" }}</div>
+            </div>
+            <div class="meta-card">
+                <div class="meta-label">Expiring Soon Cutoff</div>
+                <div class="meta-value">{{ soon_date|date:"F j, Y" }}</div>
+            </div>
+            <div class="meta-card">
+                <div class="meta-label">Total Expiring Soon</div>
+                <div class="meta-value">{{ expiring_soon.count }}</div>
+            </div>
+            <div class="meta-card">
+                <div class="meta-label">Total Expired</div>
+                <div class="meta-value">{{ expired.count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Expiring Soon (within 30 days)</h2>
+    <div class="table-responsive">
+        <table class="report-table" id="expiring-soon-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Batch Number</th>
+                    <th>Expiry Date</th>
+                    <th>Days Remaining</th>
+                    <th>Quantity</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in expiring_soon %}
+                <tr>
+                    <td>{{ batch.product.name }}</td>
+                    <td>{{ batch.batch_number }}</td>
+                    <td>{{ batch.expiry_date|date:"Y-m-d" }}</td>
+                    <td>
+                        <span class="days-remaining warning">
+                            {{ batch.expiry_date|timeuntil:report_date }}
+                        </span>
+                    </td>
+                    <td>{{ batch.quantity }}</td>
+                    <td>{{ batch.supplier.name|default:"-" }}</td>
+                    <td><span class="status-badge badge-warning">Expiring Soon</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <svg class="icon" style="width: 48px; height: 48px; margin-bottom: 1rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <p>No products expiring soon</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="section-title">Expired Products</h2>
+    <div class="table-responsive">
+        <table class="report-table" id="expired-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Batch Number</th>
+                    <th>Expiry Date</th>
+                    <th>Days Expired</th>
+                    <th>Quantity</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in expired %}
+                <tr>
+                    <td>{{ batch.product.name }}</td>
+                    <td>{{ batch.batch_number }}</td>
+                    <td>{{ batch.expiry_date|date:"Y-m-d" }}</td>
+                    <td>
+                        <span class="days-remaining danger">
+                            {{ batch.expiry_date|timesince:report_date }}
+                        </span>
+                    </td>
+                    <td>{{ batch.quantity }}</td>
+                    <td>{{ batch.supplier.name|default:"-" }}</td>
+                    <td><span class="status-badge badge-danger">Expired</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <svg class="icon" style="width: 48px; height: 48px; margin-bottom: 1rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <p>No expired products found</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Format the days remaining/expired display
+        const daysElements = document.querySelectorAll('.days-remaining');
+        
+        daysElements.forEach(el => {
+            let text = el.textContent.trim();
+            // Remove "day" or "days" and keep only the number
+            let days = parseInt(text.split(' ')[0]);
+            
+            if (isNaN(days)) {
+                // Handle cases like "0 minutes" (just expired)
+                el.textContent = "0 days";
+                days = 0;
+            } else {
+                el.textContent = days + (days === 1 ? " day" : " days");
+            }
+            
+            // Add icon based on status
+            const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            icon.setAttribute('class', 'icon');
+            icon.setAttribute('viewBox', '0 0 24 24');
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', 'currentColor');
+            icon.setAttribute('stroke-width', '2');
+            icon.setAttribute('stroke-linecap', 'round');
+            icon.setAttribute('stroke-linejoin', 'round');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            
+            if (el.classList.contains('warning')) {
+                path.setAttribute('d', 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z');
+            } else if (el.classList.contains('danger')) {
+                path.setAttribute('d', 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z');
+            }
+            
+            icon.appendChild(path);
+            el.insertBefore(icon, el.firstChild);
+        });
+
+        // CSV Export functionality
+        document.getElementById('export-csv').addEventListener('click', function() {
+            // Get current date for filename
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            const filename = `pharmacy_expiry_report_${dateString}.csv`;
+            
+            // Prepare CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add report header
+            csvContent += "Pharmacy Expiry Report\r\n";
+            csvContent += `Generated on: ${today.toLocaleDateString()}\r\n`;
+            csvContent += `Expiring Soon Cutoff: {{ soon_date|date:"Y-m-d" }}\r\n`;
+            csvContent += `Total Expiring Soon: {{ expiring_soon.count }}\r\n`;
+            csvContent += `Total Expired: {{ expired.count }}\r\n\r\n`;
+            
+            // Add expiring soon section
+            csvContent += "Expiring Soon (within 30 days)\r\n";
+            const soonTable = document.getElementById('expiring-soon-table');
+            if (soonTable) {
+                const rows = soonTable.querySelectorAll('tr');
+                rows.forEach(row => {
+                    let rowData = [];
+                    row.querySelectorAll('th, td').forEach(cell => {
+                        // Skip empty state rows
+                        if (!cell.classList.contains('empty-state')) {
+                            // Clean up cell content (remove SVG, status badges, etc.)
+                            let text = cell.textContent.trim();
+                            text = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+                            rowData.push(`"${text}"`);
+                        }
+                    });
+                    if (rowData.length > 0) {
+                        csvContent += rowData.join(',') + '\r\n';
+                    }
+                });
+            }
+            
+            csvContent += "\r\n";
+            
+            // Add expired section
+            csvContent += "Expired Products\r\n";
+            const expiredTable = document.getElementById('expired-table');
+            if (expiredTable) {
+                const rows = expiredTable.querySelectorAll('tr');
+                rows.forEach(row => {
+                    let rowData = [];
+                    row.querySelectorAll('th, td').forEach(cell => {
+                        // Skip empty state rows
+                        if (!cell.classList.contains('empty-state')) {
+                            // Clean up cell content
+                            let text = cell.textContent.trim();
+                            text = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+                            rowData.push(`"${text}"`);
+                        }
+                    });
+                    if (rowData.length > 0) {
+                        csvContent += rowData.join(',') + '\r\n';
+                    }
+                });
+            }
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+        });
+
+        // Print optimization
+        const printBtn = document.querySelector('[onclick="window.print()"]');
+        printBtn.addEventListener('click', function() {
+            // Add a small delay to ensure the print dialog appears after the page is ready
+            setTimeout(window.print, 100);
+        });
+    });
+</script>
+{% endblock %}

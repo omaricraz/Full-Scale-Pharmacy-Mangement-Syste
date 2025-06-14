@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% block title %}Purchase Orders{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --warning-color: #f59e0b;
+        --success-color: #10b981;
+        --border-color: #334155;
+    }
+
+    .product-list-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .product-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .product-list-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .product-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .product-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+    }
+
+    .product-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .product-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .product-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .badge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .badge-draft {
+        background-color: rgba(148, 163, 184, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .badge-ordered {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .badge-received {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+    }
+
+    .badge-cancelled {
+        background-color: rgba(255, 107, 107, 0.15);
+        color: var(--error-color);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .btn-sm1 {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view {
+        background-color: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #3b82f6;
+    }
+
+    .btn-view:hover {
+        background-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-edit {
+        background-color: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        color: var(--warning-color);
+    }
+
+    .btn-edit:hover {
+        background-color: rgba(234, 179, 8, 0.2);
+    }
+
+    .btn-delete {
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--error-color);
+    }
+
+    .btn-delete:hover {
+        background-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-receive {
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: var(--success-color);
+    }
+
+    .btn-receive:hover {
+        background-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .product-list-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: flex-start;
+        }
+        
+        .product-table thead {
+            display: none;
+        }
+        
+        .product-table tbody tr {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .product-table tbody td {
+            padding: 0.5rem 0;
+            border-bottom: none;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .product-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-right: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: center;
+            margin-top: 1rem;
+        }
+    }
+</style>
+
+<div class="product-list-container">
+    <div class="product-list-header">
+        <h1 class="product-list-title">Purchase Orders</h1>
+        <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Create Purchase Order
+        </a>
+    </div>
+
+    <table class="product-table">
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td data-label="PO Number">PO-{{ order.id }}</td>
+                <td data-label="Supplier">{{ order.supplier.name }}</td>
+                <td data-label="Order Date">{{ order.order_date|date:"M d, Y" }}</td>
+                <td data-label="Status">
+                    <span class="badge 
+                        {% if order.status == 'draft' %}badge-draft
+                        {% elif order.status == 'ordered' %}badge-ordered
+                        {% elif order.status == 'received' %}badge-received
+                        {% else %}badge-cancelled{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td data-label="Total Amount">${{ order.total_amount|floatformat:2 }}</td>
+                <td data-label="Actions">
+                    <div class="table-actions">
+                        <a href="{% url 'purchase_order_detail' order.pk %}" class="btn btn-sm1 btn-view" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'purchase_order_update' order.pk %}" class="btn btn-sm1 btn-edit" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if order.status == 'draft' %}
+                        <a href="{% url 'purchase_order_delete' order.pk %}" class="btn btn-sm1 btn-delete" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                        {% if order.status == 'ordered' %}
+                        <a href="{% url 'purchase_order_receive' order.pk %}" class="btn btn-sm1 btn-receive" title="Receive">
+                            <i class="bi bi-check-circle"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="empty-state">
+                    <i class="bi bi-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>No purchase orders found</p>
+                    <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">
+                        Create Your First Purchase Order
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to table rows
+        const rows = document.querySelectorAll('.product-table tbody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(10px)';
+            row.style.transition = `opacity 0.3s ease ${index * 0.05}s, transform 0.3s ease ${index * 0.05}s`;
+            
+            setTimeout(() => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, 50);
+        });
+    });
+</script>
+{% endblock %}

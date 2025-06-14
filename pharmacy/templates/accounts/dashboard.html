@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --card-border: rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard {
+        padding: 2rem;
+    }
+
+    .welcome-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background-color: var(--accent-color);
+    }
+
+    .stat-card.products::before { background-color: #2ec8a6; }
+    .stat-card.sales::before { background-color: #6366f1; }
+    .stat-card.payments::before { background-color: #f59e0b; }
+    .stat-card.prescriptions::before { background-color: #ef4444; }
+
+    .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--accent-color);
+    }
+
+    .stat-card.products .stat-icon { color: #2ec8a6; }
+    .stat-card.sales .stat-icon { color: #6366f1; }
+    .stat-card.payments .stat-icon { color: #f59e0b; }
+    .stat-card.prescriptions .stat-icon { color: #ef4444; }
+
+    .stat-title {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-link {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 0.5rem;
+        transition: color 0.2s ease;
+    }
+
+    .stat-link:hover {
+        color: var(--accent-color);
+    }
+
+    .graph-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .graph-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .graph-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .graph-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .graph-container {
+        height: 300px;
+        position: relative;
+    }
+
+    .recent-activity {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .activity-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .activity-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-message {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table {
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .table td {
+        border-top: 1px solid var(--card-border);
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard {
+            padding: 1rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard">
+    <div class="welcome-header">
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card products">
+            <i class="bi bi-capsule stat-icon"></i>
+            <div class="stat-title">Total Products</div>
+            <div class="stat-value" id="product-counter">0</div>
+            <a href="{% url 'product_list' %}" class="stat-link">View Products →</a>
+        </div>
+        
+        <div class="stat-card sales">
+            <i class="bi bi-cash-coin stat-icon"></i>
+            <div class="stat-title">Total Sales</div>
+            <div class="stat-value" id="sales-counter">0</div>
+            <a href="{% url 'sale_list' %}" class="stat-link">View Sales →</a>
+        </div>
+        
+        <div class="stat-card payments">
+            <i class="bi bi-credit-card stat-icon"></i>
+            <div class="stat-title">Total Payments</div>
+            <div class="stat-value" id="payment-counter">0</div>
+            <a href="{% url 'payment_list' %}" class="stat-link">View Payments →</a>
+        </div>
+        
+        <div class="stat-card prescriptions">
+            <i class="bi bi-file-earmark-medical stat-icon"></i>
+            <div class="stat-title">Pending Prescriptions</div>
+            <div class="stat-value" id="prescription-counter">0</div>
+            <a href="{% url 'prescription_list' %}" class="stat-link">View Prescriptions →</a>
+        </div>
+    </div>
+    
+    <!-- Payments Graph -->
+    <div class="graph-card">
+        <div class="graph-header">
+            <h5 class="graph-title">Monthly Payments Performance</h5>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary" id="thisYearBtn">This Year</button>
+                <button class="btn btn-sm btn-outline-secondary" id="lastYearBtn">Last Year</button>
+            </div>
+        </div>
+        <div class="graph-container">
+            <canvas id="paymentsChart"></canvas>
+        </div>
+    </div>
+    
+   
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate welcome header
+        const welcomeHeader = document.querySelector('.welcome-header');
+        welcomeHeader.style.opacity = '0';
+        welcomeHeader.style.transform = 'translateY(20px)';
+        welcomeHeader.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        
+        setTimeout(() => {
+            welcomeHeader.style.opacity = '1';
+            welcomeHeader.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Counter animation for stats
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    clearInterval(timer);
+                    current = target;
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 16);
+        }
+        
+        // Animate all counters
+        animateCounter(document.getElementById('product-counter'), {{ product_count }});
+        animateCounter(document.getElementById('sales-counter'), {{ total_sales_count }});
+        animateCounter(document.getElementById('payment-counter'), {{ total_payments_count }});
+        animateCounter(document.getElementById('prescription-counter'), {{ pending_prescriptions_count }});
+        
+        // Payments Chart Data
+        const currentYear = new Date().getFullYear();
+        const lastYear = currentYear - 1;
+        
+        const monthlyPaymentsData = {
+            [currentYear]: {{ monthly_payments_current|safe }},
+            [lastYear]: {{ monthly_payments_last|safe }}
+        };
+
+        // Function to determine bar color based on value
+        function getBarColor(value) {
+            if (value < 50) {
+                return 'rgba(239, 68, 68, 0.7)'; // Red for <$50
+            } else if (value < 100) {
+                return 'rgba(234, 179, 8, 0.7)'; // Yellow for <$100
+            } else {
+                return 'rgba(46, 200, 166, 0.7)'; // Green for ≥$100
+            }
+        }
+
+        // Function to determine border color based on value
+        function getBorderColor(value) {
+            if (value < 50) {
+                return 'rgba(239, 68, 68, 1)'; // Red for <$50
+            } else if (value < 100) {
+                return 'rgba(234, 179, 8, 1)'; // Yellow for <$100
+            } else {
+                return 'rgba(46, 200, 166, 1)'; // Green for ≥$100
+            }
+        }
+
+        // Prepare dataset with dynamic colors
+        function prepareDataset(yearData, year) {
+            return {
+                label: `Payments (${year})`,
+                data: yearData,
+                backgroundColor: yearData.map(value => getBarColor(value)),
+                borderColor: yearData.map(value => getBorderColor(value)),
+                borderWidth: 1,
+                borderRadius: 4,
+                hoverBackgroundColor: yearData.map(value => {
+                    if (value < 50) {
+                        return 'rgba(239, 68, 68, 0.9)';
+                    } else if (value < 100) {
+                        return 'rgba(234, 179, 8, 0.9)';
+                    } else {
+                        return 'rgba(46, 200, 166, 0.9)';
+                    }
+                })
+            };
+        }
+        
+        // Payments Chart
+        const ctx = document.getElementById('paymentsChart').getContext('2d');
+        let paymentsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [prepareDataset(monthlyPaymentsData[currentYear], currentYear)]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Year toggle buttons functionality
+        document.getElementById('thisYearBtn').addEventListener('click', function() {
+            paymentsChart.data.datasets = [prepareDataset(monthlyPaymentsData[currentYear], currentYear)];
+            paymentsChart.update();
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-primary');
+            document.getElementById('lastYearBtn').classList.remove('btn-primary');
+            document.getElementById('lastYearBtn').classList.add('btn-outline-secondary');
+        });
+        
+        document.getElementById('lastYearBtn').addEventListener('click', function() {
+            paymentsChart.data.datasets = [prepareDataset(monthlyPaymentsData[lastYear], lastYear)];
+            paymentsChart.update();
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-primary');
+            document.getElementById('thisYearBtn').classList.remove('btn-primary');
+            document.getElementById('thisYearBtn').classList.add('btn-outline-secondary');
+        });
+        
+        // Initialize with current year selected
+        document.getElementById('thisYearBtn').click();
+        
+        // Add hover effects to cards
+        const cards = document.querySelectorAll('.stat-card, .graph-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = card.classList.contains('stat-card') ? 
+                    'translateY(-5px)' : 'translateY(-3px)';
+                card.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

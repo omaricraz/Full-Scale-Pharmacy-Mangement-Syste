@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Profile | 2025{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+    }
+
+    .profile-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .avatar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    .form-text {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+        color: var(--error-color);
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: var(--error-color);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+    }
+
+    .file-upload {
+        position: relative;
+        display: inline-block;
+    }
+
+    .file-upload-input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-upload-label {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .file-upload-label:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .profile-form-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: span 1;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="profile-form-container">
+    <div class="form-header">
+        <h2 class="form-title">Update Your Profile</h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="avatar-container">
+            {% if form.instance.profile_picture %}
+                <img id="avatar-preview" src="{{ form.instance.profile_picture.url }}" class="avatar-preview" alt="Current avatar">
+            {% else %}
+                <img id="avatar-preview" src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username }}&background=random" class="avatar-preview" alt="Default avatar">
+            {% endif %}
+            
+            <div class="file-upload">
+                <label class="file-upload-label">
+                    <i class="fas fa-camera"></i> Change Profile Picture
+                    <input type="file" name="profile_picture" id="id_profile_picture" class="file-upload-input" accept="image/*">
+                </label>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
+                {{ form.username.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_role">Role</label>
+                <select name="role" id="id_role" class="form-control">
+                    {% for value, label in form.fields.role.choices %}
+                        <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {{ form.role.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_first_name">First Name</label>
+                <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ form.first_name.value|default:'' }}">
+                {{ form.first_name.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_last_name">Last Name</label>
+                <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ form.last_name.value|default:'' }}">
+                {{ form.last_name.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full-width">
+                <label for="id_email">Email</label>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                {{ form.email.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_phone">Phone</label>
+                <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+                {{ form.phone.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_address">Address</label>
+                <input type="text" name="address" id="id_address" class="form-control" value="{{ form.address.value|default:'' }}">
+                {{ form.address.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_date_of_birth">Date of Birth</label>
+                <input type="date" name="date_of_birth" id="id_date_of_birth" class="form-control" value="{{ form.date_of_birth.value|date:'Y-m-d'|default:'' }}">
+                {{ form.date_of_birth.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_hire_date">Hire Date</label>
+                <input type="date" name="hire_date" id="id_hire_date" class="form-control" value="{{ form.hire_date.value|date:'Y-m-d'|default:'' }}">
+                {{ form.hire_date.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full-width">
+                <div class="form-check">
+                    <input type="checkbox" name="is_active" id="id_is_active" class="form-check-input" {% if form.is_active.value %}checked{% endif %}>
+                    <label for="id_is_active" class="form-check-label">Active</label>
+                </div>
+                {{ form.is_active.errors }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update Profile
+            </button>
+            <a href="{% url 'profile' %}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Avatar preview
+        $('#id_profile_picture').change(function() {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    $('#avatar-preview').attr('src', e.target.result);
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        // Date pickers
+        $('#id_date_of_birth').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            endDate: '0d',
+            todayHighlight: true
+        });
+
+        $('#id_hire_date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        // Set placeholders dynamically
+        document.getElementById('id_date_of_birth').placeholder = 'YYYY-MM-DD';
+        document.getElementById('id_hire_date').placeholder = 'YYYY-MM-DD';
+    });
+</script>
+{% endblock %}
+{% endblock %}

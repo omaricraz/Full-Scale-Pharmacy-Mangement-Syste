@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Delete Payment{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --danger-color: #ff6b6b;
+        --warning-color: #ffc107;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+
+    .delete-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border-left: 4px solid var(--danger-color);
+    }
+
+    .delete-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .warning-icon {
+        color: var(--danger-color);
+        font-size: 1.5rem;
+    }
+
+    .delete-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .delete-message {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .payment-details {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-row {
+        display: flex;
+        margin-bottom: 0.75rem;
+    }
+
+    .detail-label {
+        min-width: 120px;
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    .detail-value {
+        color: var(--text-primary);
+    }
+
+    .delete-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #e05555;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .delete-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .delete-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+        
+        .detail-row {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .detail-label {
+            min-width: auto;
+        }
+    }
+</style>
+
+<div class="delete-container">
+    <div class="delete-header">
+        <div class="warning-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </div>
+        <h2 class="delete-title">Delete Payment</h2>
+    </div>
+    
+    <p class="delete-message">
+        You are about to permanently delete this payment record. This action cannot be undone.
+    </p>
+    
+    <div class="payment-details">
+        <div class="detail-row">
+            <span class="detail-label">Amount:</span>
+            <span class="detail-value">${{ payment.amount }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">{{ payment.payment_date|date:"M d, Y" }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Method:</span>
+            <span class="detail-value">{{ payment.get_payment_method_display }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Billing:</span>
+            <span class="detail-value">Invoice #{{ payment.billing.invoice_number }}</span>
+        </div>
+    </div>
+    
+    <form method="post" class="delete-form">
+        {% csrf_token %}
+        <div class="delete-actions">
+            <a href="{% url 'billing_detail' payment.billing.pk %}" class="btn btn-outline">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-danger">
+                Delete Payment
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

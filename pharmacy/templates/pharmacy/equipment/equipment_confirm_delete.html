@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Equipment{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Confirm Deletion</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <p>Are you sure you want to delete the equipment <strong>{{ object.name }}</strong> (Serial: {{ object.serial_number }})?</p>
+            <p class="text-danger">This action cannot be undone.</p>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> Confirm Delete
+                </button>
+                <a href="{% url 'equipment_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

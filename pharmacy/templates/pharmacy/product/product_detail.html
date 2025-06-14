@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Product Details{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --danger-color: #ff6b6b;
+        --info-color: #3b82f6;
+        --inactive-color: #64748b;
+    }
+
+    .product-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .product-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .product-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-danger {
+        background-color: transparent;
+        border: 1px solid var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: rgba(255, 107, 107, 0.1);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+
+    .badge-success {
+        background-color: rgba(46, 200, 166, 0.2);
+        color: var(--success-color);
+    }
+
+    .badge-warning {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: var(--warning-color);
+    }
+
+    .badge-secondary {
+        background-color: rgba(100, 116, 139, 0.2);
+        color: var(--inactive-color);
+    }
+
+    .badge-danger {
+        background-color: rgba(255, 107, 107, 0.2);
+        color: var(--danger-color);
+    }
+
+    .stock-indicator {
+        height: 8px;
+        border-radius: 4px;
+        background-color: var(--border-color);
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+
+    .stock-level {
+        height: 100%;
+        background-color: var(--accent-color);
+        border-radius: 4px;
+    }
+
+    .product-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .product-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .product-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .product-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .product-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .chart-container {
+        height: 300px;
+        margin-top: 1rem;
+    }
+
+    .expiry-warning {
+        color: var(--warning-color);
+        font-weight: 500;
+    }
+
+    .expiry-danger {
+        color: var(--danger-color);
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .product-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .action-buttons {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="product-container">
+    <div class="product-header">
+        <div>
+            <h1 class="product-title">{{ product.name }}</h1>
+            <p class="product-subtitle">{{ product.generic_name|default:"" }}</p>
+        </div>
+        <div class="action-buttons">
+            <a href="{% url 'product_update' product.pk %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Product
+            </a>
+            <a href="{% url 'product_delete' product.pk %}" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Delete Product
+            </a>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Product Details</h3>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge {% if product.is_active %}badge-success{% else %}badge-secondary{% endif %}">
+                        {% if product.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Category</div>
+                <div class="info-value">{{ product.category|default:"-" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Product Type</div>
+                <div class="info-value">{{ product.get_product_type_display }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Barcode</div>
+                <div class="info-value">{{ product.barcode|default:"-" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Unit of Measure</div>
+                <div class="info-value">{{ product.unit_of_measure }}</div>
+            </div>
+            {% if product.description %}
+            <div class="info-item">
+                <div class="info-label">Description</div>
+                <div class="info-value">{{ product.description }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info-card">
+            <h3 class="info-title">Pricing & Inventory</h3>
+            <div class="info-item">
+                <div class="info-label">Cost Price</div>
+                <div class="info-value">${{ product.cost_price }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Selling Price</div>
+                <div class="info-value">${{ product.selling_price }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Minimum Stock Level</div>
+                <div class="info-value">{{ product.min_stock_level }} {{ product.unit_of_measure }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Current Stock</div>
+                <div class="info-value">
+                    <span class="badge {% if stock_info.total_quantity <= product.min_stock_level %}badge-warning{% else %}badge-success{% endif %}">
+                        {{ stock_info.total_quantity }} {{ product.unit_of_measure }}
+                        {% if stock_info.total_quantity <= product.min_stock_level %}(Low Stock){% endif %}
+                    </span>
+                </div>
+                <div class="stock-indicator">
+                    <div class="stock-level" style="width: {% widthratio stock_info.total_quantity product.min_stock_level|add:product.min_stock_level 100 %}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Stock Batches</h3>
+            {% if batches %}
+            <div class="table-responsive">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Batch Number</th>
+                            <th>Expiry Date</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in batches %}
+                        <tr>
+                            <td>{{ batch.batch_number }}</td>
+                            <td>
+                                {{ batch.expiry_date }}
+                                {% if batch.is_expiring_soon %}
+                                    <span class="expiry-warning">(Expiring soon)</span>
+                                {% elif batch.is_expired %}
+                                    <span class="expiry-danger">(Expired)</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ batch.remaining_quantity }} {{ product.unit_of_measure }}</td>
+                            <td>
+                                {% if batch.is_expired %}
+                                    <span class="badge badge-danger">Expired</span>
+                                {% elif batch.is_expiring_soon %}
+                                    <span class="badge badge-warning">Expiring Soon</span>
+                                {% else %}
+                                    <span class="badge badge-success">Active</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 3v4a1 1 0 0 0 1 1h4"></path>
+                    <path d="M18 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l2 2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2z"></path>
+                    <line x1="9" y1="7" x2="9" y2="7"></line>
+                    <line x1="9" y1="12" x2="9" y2="12"></line>
+                    <line x1="9" y1="17" x2="9" y2="17"></line>
+                </svg>
+                <p>No active batches found for this product</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="info-card">
+            <h3 class="info-title">Sales Performance</h3>
+            {% if sales_data %}
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="20" x2="12" y2="10"></line>
+                    <line x1="18" y1="20" x2="18" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+                <p>No sales data available for this product</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if sales_data %}
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        
+        const salesDates = [{% for item in sales_data %}"{{ item.day|date:'Y-m-d' }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const quantitiesSold = [{% for item in sales_data %}{{ item.total_sold|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const revenues = [{% for item in sales_data %}{{ item.total_revenue|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+        
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesDates,
+                datasets: [
+                    {
+                        label: 'Quantity Sold',
+                        data: quantitiesSold,
+                        borderColor: '#2ec8a6',
+                        backgroundColor: 'rgba(46, 200, 166, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Revenue ($)',
+                        data: revenues,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Quantity Sold'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

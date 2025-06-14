@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Inventory Report</h1>
+    <div>
+        <a href="{% url 'expiry_report' %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-calendar-x"></i> Expiry Report
+        </a>
+        <a href="#" class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Out of Stock</h5>
+                <p class="card-text display-4">{{ out_of_stock.count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Low Stock</h5>
+                <p class="card-text display-4">{{ low_stock.count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Products</h5>
+                <p class="card-text display-4">{{ products.count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Low Stock Items (≤ min stock level)</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Current Stock</th>
+                        <th>Min Stock Level</th>
+                        <th>Value</th>
+                        <th>Last Purchase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in low_stock %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_update' product.id %}">{{ product.name }}</a>
+                            {% if product.generic_name %}<br><small>{{ product.generic_name }}</small>{% endif %}
+                        </td>
+                        <td class="text-danger">{{ product.total_stock|default:0 }}</td>
+                        <td>{{ product.min_stock_level }}</td>
+                        <td>${{ product.total_value|default:0|floatformat:2 }}</td>
+                        <td>
+                            {% with product.batches.first as batch %}
+                                {% if batch %}
+                                    {{ batch.date_received|date:"Y-m-d" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No low stock items</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Out of Stock Items</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Last Purchase</th>
+                        <th>Last Sale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in out_of_stock %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_update' product.id %}">{{ product.name }}</a>
+                        </td>
+                        <td>{{ product.category.name|default:"-" }}</td>
+                        <td>
+                            {% with product.batches.first as batch %}
+                                {% if batch %}
+                                    {{ batch.date_received|date:"Y-m-d" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% with product.saleitem_set.first as sale_item %}
+                                {% if sale_item %}
+                                    {{ sale_item.sale.date|date:"Y-m-d" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No out of stock items</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Complete Inventory</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Total Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="{% if product.total_stock <= product.min_stock_level %}table-warning{% endif %}">
+                        <td>
+                            <a href="{% url 'product_update' product.id %}">{{ product.name }}</a>
+                            {% if product.generic_name %}<br><small>{{ product.generic_name }}</small>{% endif %}
+                        </td>
+                        <td>{{ product.category.name|default:"-" }}</td>
+                        <td>{{ product.total_stock|default:0 }}</td>
+                        <td>${{ product.cost_price|floatformat:2 }}</td>
+                        <td>${{ product.selling_price|floatformat:2 }}</td>
+                        <td>${{ product.total_value|default:0|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

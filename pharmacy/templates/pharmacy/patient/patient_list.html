@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient List{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --warning-color: #f59e0b;
+        --success-color: #10b981;
+        --border-color: #334155;
+    }
+
+    .patient-list-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .patient-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .patient-list-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .patient-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .patient-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+    }
+
+    .patient-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .patient-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .patient-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .gender-badge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .gender-male {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .gender-female {
+        background-color: rgba(236, 72, 153, 0.15);
+        color: #ec4899;
+    }
+
+    .gender-other {
+        background-color: rgba(148, 163, 184, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .insurance-badge {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+
+    .no-insurance {
+        background-color: rgba(148, 163, 184, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary {
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--accent-color);
+        color: var(--bg-primary);
+    }
+
+    .btn-outline-danger {
+        border: 1px solid var(--error-color);
+        color: var(--error-color);
+        background: transparent;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: var(--error-color);
+        color: white;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .patient-list-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: flex-start;
+        }
+        
+        .patient-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="patient-list-container">
+    <div class="patient-list-header">
+        <h2 class="patient-list-title">Patient List</h2>
+        <a href="{% url 'patient_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Patient
+        </a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="patient-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Gender</th>
+                    <th>Date of Birth</th>
+                    <th>Insurance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.id }}</td>
+                    <td>
+                        <strong>{{ patient.first_name }} {{ patient.last_name }}</strong>
+                    </td>
+                    <td>{{ patient.phone|default:"-" }}</td>
+                    <td>
+                        <span class="gender-badge gender-{{ patient.gender|lower }}">
+                            <i class="bi bi-{% if patient.gender == 'M' %}gender-male{% elif patient.gender == 'F' %}gender-female{% else %}gender-ambiguous{% endif %}"></i>
+                            {{ patient.get_gender_display }}
+                        </span>
+                    </td>
+                    <td>{{ patient.date_of_birth|date:"Y-m-d" }}</td>
+                    <td>
+                        {% if patient.insurance_provider %}
+                            <span class="insurance-badge">
+                                <i class="bi bi-shield-check"></i>
+                                {{ patient.insurance_provider }}
+                            </span>
+                        {% else %}
+                            <span class="no-insurance">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a href="{% url 'patient_update' patient.pk %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'patient_delete' patient.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="bi bi-people" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>No patients found. Add your first patient to get started.</p>
+                        <a href="{% url 'patient_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Add Patient
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to table rows
+        const rows = document.querySelectorAll('.patient-table tbody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(10px)';
+            row.style.transition = `opacity 0.3s ease ${index * 0.05}s, transform 0.3s ease ${index * 0.05}s`;
+            
+            setTimeout(() => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, 50);
+        });
+    });
+</script>
+{% endblock %}

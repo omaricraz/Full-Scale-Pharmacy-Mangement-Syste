@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+    }
+
+    body {
+        background-color: var(--bg-secondary);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text-primary);
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        border: 1px solid #1e293b;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-title {
+        text-align: center;
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: var(--accent-color);
+        margin-bottom: 25px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-row.full-width {
+        grid-template-columns: 1fr;
+    }
+
+    label.form-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #3c4451;
+        border-radius: 10px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: all 0.3s ease-in-out;
+        font-size: 0.95rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(46, 200, 166, 0.3);
+        background-color: var(--bg-primary);
+    }
+
+    .invalid-feedback {
+        font-size: 0.875rem;
+        color: #ff6b6b;
+        margin-top: 5px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #1e293b;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    textarea {
+        min-height: 100px;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+
+    .alert {
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        transition: opacity 0.5s ease-out;
+        text-align: center;
+    }
+
+    .alert-success {
+        background-color: #2ec8a6;
+        color: #ffffff;
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-title">{{ title }}</div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row full-width">
+            <div>
+                <label class="form-label" for="id_product">Product</label>
+                {{ form.product }}
+                {{ form.product.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label class="form-label" for="id_batch">Batch</label>
+                {{ form.batch }}
+                {{ form.batch.errors }}
+            </div>
+            <div>
+                <label class="form-label" for="id_quantity">Quantity</label>
+                {{ form.quantity }}
+                {{ form.quantity.errors }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label class="form-label" for="id_reason">Reason</label>
+                {{ form.reason }}
+                {{ form.reason.errors }}
+            </div>
+            <div>
+                <label class="form-label" for="id_adjusted_by">Adjusted By</label>
+                {{ form.adjusted_by }}
+                {{ form.adjusted_by.errors }}
+            </div>
+        </div>
+
+        <div class="form-row full-width">
+            <div>
+                <label class="form-label" for="id_notes">Notes</label>
+                {{ form.notes }}
+                {{ form.notes.errors }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <a href="{% url 'stock_adjustment_list' %}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#id_product').select2({
+            placeholder: "Select a product",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('.form-container')
+        });
+
+        $('#id_adjusted_by').select2({
+            placeholder: "Select a user",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('.form-container')
+        });
+
+        $('#id_product').change(function() {
+            var productId = $(this).val();
+            if (productId) {
+                $('#id_batch').closest('.form-group, div').show();
+                var url = "{% url 'ajax_product_batches' 0 %}".replace('0', productId);
+                $.get(url, function(data) {
+                    $('#id_batch').empty();
+                    $.each(data, function(index, batch) {
+                        $('#id_batch').append($('<option>', {
+                            value: batch.id,
+                            text: batch.text
+                        }));
+                    });
+                });
+            } else {
+                $('#id_batch').closest('.form-group, div').hide();
+            }
+        });
+
+        $('#id_batch').select2({
+            placeholder: "Select a batch",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('.form-container')
+        });
+
+        if (!$('#id_product').val()) {
+            $('#id_batch').closest('.form-group, div').hide();
+        } else {
+            $('#id_batch').closest('.form-group, div').show();
+        }
+    });
+</script>
+{% endblock %}

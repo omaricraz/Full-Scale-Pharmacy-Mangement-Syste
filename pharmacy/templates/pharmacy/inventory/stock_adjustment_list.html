@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}Stock Adjustments{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --danger-color: #ff6b6b;
+        --warning-color: #ffc107;
+        --success-color: #8A5BFC;
+        --info-color: #17a2b8;
+        --border-color: #334155;
+    }
+
+    .stock-adjustment-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .stock-adjustment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stock-adjustment-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .stock-adjustment-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .stock-adjustment-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+    }
+
+    .stock-adjustment-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .stock-adjustment-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .stock-adjustment-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .adjustment-positive {
+        color: var(--success-color);
+        font-weight: 500;
+    }
+
+    .adjustment-negative {
+        color: var(--danger-color);
+        font-weight: 500;
+    }
+
+    .badge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .badge-expired {
+        background-color: rgba(255, 107, 107, 0.15);
+        color: var(--danger-color);
+    }
+
+    .badge-damaged {
+        background-color: rgba(255, 193, 7, 0.15);
+        color: var(--warning-color);
+    }
+
+    .badge-scheduled {
+        background-color: rgba(138, 91, 252, 0.15);
+        color: var(--success-color);
+    }
+
+    .badge-other {
+        background-color: rgba(23, 162, 184, 0.15);
+        color: var(--info-color);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-sm1 {
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--text-secondary);
+        color: var(--bg-primary);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .stock-adjustment-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="stock-adjustment-container">
+    <div class="stock-adjustment-header">
+        <h1 class="stock-adjustment-title">Stock Adjustments</h1>
+        <a href="{% url 'stock_adjustment_create' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            New Adjustment
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="stock-adjustment-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Batch</th>
+                    <th>Quantity</th>
+                    <th>Reason</th>
+                    <th>Adjusted By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for adjustment in adjustments %}
+                <tr>
+                    <td>{{ adjustment.date|date:"Y-m-d H:i" }}</td>
+                    <td>{{ adjustment.product.name }}</td>
+                    <td>
+                        {% if adjustment.batch %}
+                            {{ adjustment.batch.batch_number }} (Exp: {{ adjustment.batch.expiry_date|date:"Y-m-d" }})
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="{% if adjustment.quantity > 0 %}adjustment-positive{% else %}adjustment-negative{% endif %}">
+                        {% if adjustment.quantity > 0 %}+{% endif %}{{ adjustment.quantity }}
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if adjustment.reason == 'expired' %}badge-expired
+                            {% elif adjustment.reason == 'damaged' %}badge-damaged
+                            {% elif adjustment.reason == 'scheduled' %}badge-scheduled
+                            {% else %}badge-other{% endif %}">
+                            {{ adjustment.get_reason_display }}
+                        </span>
+                    </td>
+                    <td>{{ adjustment.adjusted_by.get_full_name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">No stock adjustments found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

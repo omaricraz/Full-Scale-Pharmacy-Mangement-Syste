@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Category{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --danger-color: #ff6b6b;
+        --warning-color: #ffc107;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+
+    .delete-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px);
+        padding: 2rem;
+    }
+
+    .delete-card {
+        width: 100%;
+        max-width: 600px;
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        border-top: 4px solid var(--danger-color);
+        transform: translateY(20px);
+        opacity: 0;
+        animation: fadeInUp 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .delete-header {
+        padding: 1.5rem;
+        background-color: rgba(255, 107, 107, 0.1);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .delete-icon {
+        width: 40px;
+        height: 40px;
+        background-color: var(--danger-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .delete-icon svg {
+        width: 20px;
+        height: 20px;
+        color: white;
+    }
+
+    .delete-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .delete-body {
+        padding: 2rem;
+    }
+
+    .delete-message {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+    }
+
+    .delete-message strong {
+        color: var(--danger-color);
+    }
+
+    .delete-warning {
+        background-color: rgba(255, 107, 107, 0.1);
+        border-left: 4px solid var(--danger-color);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .delete-warning svg {
+        width: 20px;
+        height: 20px;
+        color: var(--danger-color);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .delete-warning p {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #ff4757;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+        background-color: rgba(148, 163, 184, 0.1);
+    }
+
+    @media (max-width: 576px) {
+        .delete-container {
+            padding: 1rem;
+        }
+        
+        .delete-card {
+            border-radius: 8px;
+        }
+        
+        .delete-header {
+            padding: 1rem;
+        }
+        
+        .delete-body {
+            padding: 1.5rem;
+        }
+        
+        .delete-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="delete-header">
+            <div class="delete-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h2 class="delete-title">Confirm Deletion</h2>
+        </div>
+        
+        <div class="delete-body">
+            <p class="delete-message">
+                Are you sure you want to delete the category <strong>"{{ category.name }}"</strong>?
+            </p>
+            
+            <div class="delete-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p>This action cannot be undone. All products associated with this category will be affected.</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="delete-actions">
+                    <a href="{% url 'category_list' %}" class="btn btn-outline">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

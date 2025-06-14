@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% block title %}Prescription #{{ prescription.id }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --danger-color: #ff6b6b;
+        --info-color: #3b82f6;
+        --inactive-color: #64748b;
+    }
+
+    .prescription-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .prescription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .prescription-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-outline:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .btn-danger {
+        background-color: transparent;
+        border: 1px solid var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: rgba(255, 107, 107, 0.1);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .patient-link {
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .patient-link:hover {
+        color: #25a38a;
+        text-decoration: underline;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+
+    .badge-success {
+        background-color: rgba(46, 200, 166, 0.2);
+        color: var(--success-color);
+    }
+
+    .badge-warning {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: var(--warning-color);
+    }
+
+    .badge-info {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--info-color);
+    }
+
+    .badge-danger {
+        background-color: rgba(255, 107, 107, 0.2);
+        color: var(--danger-color);
+    }
+
+    .notes-section {
+        padding: 0 1.5rem 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .notes-content {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        color: var(--text-primary);
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .items-section {
+        padding: 0 1.5rem 1.5rem;
+    }
+
+    .items-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .prescription-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .prescription-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .prescription-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .prescription-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .prescription-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: rgba(148, 163, 184, 0.1);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .prescription-container, .prescription-container * {
+            visibility: visible;
+        }
+        .prescription-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none;
+            box-shadow: none;
+            background-color: white;
+            color: black;
+        }
+        .no-print {
+            display: none !important;
+        }
+        a {
+            text-decoration: none;
+            color: black !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .items-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+</style>
+
+<div class="prescription-container">
+    <div class="prescription-header">
+        <h1 class="prescription-title">Prescription #{{ prescription.id }}</h1>
+        <div class="action-buttons no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                    <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                </svg>
+                Print
+            </button>
+            <a href="{% url 'prescription_list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Prescriptions
+            </a>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Patient Information</h3>
+            <div class="info-item">
+                <div class="info-label">Name</div>
+                <div class="info-value">
+                    <a href="#" class="patient-link">
+                        {{ prescription.patient }}
+                    </a>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">{{ prescription.patient.date_of_birth }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{{ prescription.patient.get_gender_display }}</div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3 class="info-title">Prescription Details</h3>
+            <div class="info-item">
+                <div class="info-label">Prescribing Doctor</div>
+                <div class="info-value">{{ prescription.prescribing_doctor }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date Prescribed</div>
+                <div class="info-value">{{ prescription.date_prescribed }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge 
+                        {% if prescription.status == 'filled' %}badge-success
+                        {% elif prescription.status == 'pending' %}badge-warning
+                        {% elif prescription.status == 'partially_filled' %}badge-info
+                        {% else %}badge-danger{% endif %}">
+                        {{ prescription.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if prescription.notes %}
+    <div class="notes-section">
+        <h3 class="section-title">Notes</h3>
+        <div class="notes-content">
+            {{ prescription.notes }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="items-section">
+        <div class="items-header">
+            <h3 class="section-title">Prescription Items</h3>
+            <a href="{% url 'prescription_item_add' prescription_pk=prescription.pk %}" class="btn btn-primary no-print">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Add Item
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="prescription-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Dosage</th>
+                        <th>Duration</th>
+                        <th>Filled</th>
+                        {% if not print %}<th class="no-print">Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.product }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.dosage }}</td>
+                        <td>{{ item.duration }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if item.filled_quantity == item.quantity %}badge-success
+                                {% elif item.filled_quantity == 0 %}badge-warning
+                                {% else %}badge-info{% endif %}">
+                                {{ item.filled_quantity }} / {{ item.quantity }}
+                            </span>
+                        </td>
+                        {% if not print %}
+                        <td class="table-actions no-print">
+                            <a href="{% url 'prescription_item_edit' pk=item.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'prescription_item_delete' pk=item.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if print %}5{% else %}6{% endif %}" class="empty-state">No items added to this prescription</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="prescription-header no-print">
+        <div></div>
+        <div class="action-buttons">
+            <a href="{% url 'prescription_update' pk=prescription.pk %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+                Edit Prescription
+            </a>
+            <a href="{% url 'prescription_delete' pk=prescription.pk %}" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+                Delete Prescription
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

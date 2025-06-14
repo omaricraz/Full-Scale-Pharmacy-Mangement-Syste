@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Expiry Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Expiry Report</h1>
+    <div>
+        <a href="{% url 'inventory_report' %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-box-seam"></i> Inventory Report
+        </a>
+        <a href="#" class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Expired Products</h5>
+                <p class="card-text display-4">{{ expired.count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Expiring Soon (within 30 days)</h5>
+                <p class="card-text display-4">{{ expiring_soon.count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h3 class="card-title">Expired Products</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Expiry Date</th>
+                        <th>Quantity</th>
+                        <th>Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in expired %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_update' batch.product.id %}">{{ batch.product.name }}</a>
+                        </td>
+                        <td>{{ batch.batch_number }}</td>
+                        <td class="text-danger">{{ batch.expiry_date|date:"Y-m-d" }}</td>
+                        <td>{{ batch.quantity }}</td>
+                        <td>${{ batch.total_value|floatformat:2 }}</td>
+                        <td class="table-actions">
+                            <a href="{% url 'stock_adjustment_create' %}?batch={{ batch.id }}&quantity=-{{ batch.quantity }}&reason=expired" 
+                               class="btn btn-sm btn-outline-danger" 
+                               title="Write Off">
+                                <i class="bi bi-trash"></i> Write Off
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No expired products found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-warning text-white">
+        <h3 class="card-title">Products Expiring Soon (within 30 days)</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                        <th>Quantity</th>
+                        <th>Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in expiring_soon %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_update' batch.product.id %}">{{ batch.product.name }}</a>
+                        </td>
+                        <td>{{ batch.batch_number }}</td>
+                        <td class="text-warning">{{ batch.expiry_date|date:"Y-m-d" }}</td>
+                        <td>{{ batch.days_until_expiry }} days</td>
+                        <td>{{ batch.quantity }}</td>
+                        <td>${{ batch.total_value|floatformat:2 }}</td>
+                        <td class="table-actions">
+                            <div class="btn-group">
+                                <a href="#" class="btn btn-sm btn-outline-warning" title="Move to front">
+                                    <i class="bi bi-arrow-up"></i> Prioritize
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-info" title="Create discount">
+                                    <i class="bi bi-tag"></i> Discount
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No products expiring soon</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Add days until expiry to each batch
+    $('tbody tr').each(function() {
+        var expiryDateText = $(this).find('td:nth-child(3)').text().trim();
+        if (expiryDateText) {
+            var expiryDate = new Date(expiryDateText);
+            var today = new Date();
+            var timeDiff = expiryDate.getTime() - today.getTime();
+            var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            $(this).find('td:nth-child(4)').text(daysDiff + " days");
+            
+            // Color code based on days left
+            if (daysDiff <= 0) {
+                $(this).find('td:nth-child(4)').addClass('text-danger');
+            } else if (daysDiff <= 7) {
+                $(this).find('td:nth-child(4)').addClass('text-danger');
+            } else if (daysDiff <= 14) {
+                $(this).find('td:nth-child(4)').addClass('text-warning');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

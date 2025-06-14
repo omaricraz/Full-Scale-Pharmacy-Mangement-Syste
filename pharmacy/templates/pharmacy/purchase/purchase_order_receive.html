@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Receive Purchase Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --danger-color: #ff6b6b;
+        --info-color: #3b82f6;
+    }
+
+    .receive-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 2rem auto;
+        max-width: 1200px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .alert-info {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-left: 4px solid var(--info-color);
+        color: var(--text-primary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .alert-heading {
+        color: var(--info-color);
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .card {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: rgba(30, 41, 59, 0.5);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .table {
+        width: 100%;
+        color: var(--text-primary);
+        border-collapse: collapse;
+    }
+
+    .table thead th {
+        background-color: var(--bg-primary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-success:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-secondary {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+        background-color: rgba(30, 41, 59, 0.8);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-item {
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="receive-container">
+    <div class="page-header">
+        <h1 class="page-title">Receive Purchase Order #{{ order.id }}</h1>
+    </div>
+
+    <div class="alert-info">
+        <h4 class="alert-heading">Receiving Purchase Order</h4>
+        <p>This action will mark the purchase order as received and update inventory stock levels.</p>
+        <hr>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Supplier</div>
+                <div class="info-value">{{ order.supplier.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Order Date</div>
+                <div class="info-value">{{ order.order_date }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Items</div>
+                <div class="info-value">{{ order.items.count }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Total Amount</div>
+                <div class="info-value">${{ order.total_amount|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Order Items</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Ordered</th>
+                            <th>Received</th>
+                            <th>To Receive</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.received_quantity }}</td>
+                            <td>{{ item.quantity|subtract:item.received_quantity }}</td>
+                            <td>${{ item.unit_price|floatformat:2 }}</td>
+                            <td>${{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                </svg>
+                Confirm Receipt
+            </button>
+            <a href="{% url 'purchase_order_detail' order.pk %}" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

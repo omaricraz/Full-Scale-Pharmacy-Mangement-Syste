@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Notification{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Delete Notification</h5>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete this notification?</p>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6>{{ notification.title }}</h6>
+                <p class="mb-1">{{ notification.message }}</p>
+                <small class="text-muted">{{ notification.created_at }}</small>
+            </div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a href="{% url 'notification_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

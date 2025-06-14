@@ -1,0 +1,685 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Point of Sale - 2025{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+        --success-color: #10b981;
+    }
+
+    .pos-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .pos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .pos-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .pos-title svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .pos-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .pos-card {
+        background-color: var(--bg-secondary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        background-color: rgba(46, 200, 166, 0.1);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .pos-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .pos-table thead th {
+        background-color: var(--bg-primary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+    }
+
+    .pos-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .pos-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .pos-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quantity-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .quantity-btn:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+        border-color: var(--accent-color);
+    }
+
+    .quantity-input {
+        width: 40px;
+        text-align: center;
+        background-color: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .remove-btn {
+        color: var(--error-color);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .remove-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+
+    .pos-summary {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .summary-label {
+        color: var(--text-secondary);
+    }
+
+    .summary-value {
+        font-weight: 500;
+    }
+
+    .total-row {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        font-size: 1.1rem;
+    }
+
+    .total-value {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .pos-form .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .pos-form label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .pos-form select,
+    .pos-form input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .pos-form select:focus,
+    .pos-form input:focus {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    .popular-products {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .product-btn {
+        padding: 0.75rem;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .product-btn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .product-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .pos-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pos-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .popular-products {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .popular-products {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="pos-container">
+    <div class="pos-header">
+        <h2 class="pos-title">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M9 20H7C5.89543 20 5 19.1046 5 18V10C5 8.89543 5.89543 8 7 8H9M9 20H15M9 20V8M15 20H17C18.1046 20 19 19.1046 19 18V6C19 4.89543 18.1046 4 17 4H12M9 8V6C9 4.89543 9.89543 4 11 4H12M12 4V8M12 8H15M15 8V20"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Point of Sale - 2025
+        </h2>
+        <div class="current-time" id="current-time">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span id="time-display"></span>
+        </div>
+    </div>
+
+    <div class="pos-grid">
+        <!-- Current Sale Section -->
+        <div class="pos-card">
+            <div class="card-header">
+                <h3 class="card-title">Current Sale</h3>
+                <div class="sale-id">#{{ current_sale_id }}</div>
+            </div>
+            <div class="card-body">
+                {% if products_in_cart %}
+                <div class="table-responsive">
+                    <table class="pos-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in products_in_cart %}
+                            <tr class="pos-item" data-item-id="{{ item.item_id }}">
+                                <td>
+                                    <div class="product-info">
+                                        <div class="product-name">{{ item.product.name }}</div>
+                                        <div class="product-batch text-muted">{{ item.batch.batch_number|default:"-" }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ item.unit_price }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.total_price }}</td>
+                                <td>
+                                    <a href="{% url 'pos_remove_item' item.item_id %}" class="remove-btn"
+                                        data-item-id="{{ item.item_id }}">
+                                        <i class="fas fa-trash text-danger"></i>
+                                        <svg class="text-danger" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    </a>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.70711 15.2929C4.07714 15.9229 4.52331 17 5.41421 17H17M17 17C15.8954 17 15 17.8954 15 19C15 20.1046 15.8954 21 17 21C18.1046 21 19 20.1046 19 19C19 17.8954 18.1046 17 17 17ZM9 19C9 20.1046 8.10457 21 7 21C5.89543 21 5 20.1046 5 19C5 17.8954 5.89543 17 7 17C8.10457 17 9 17.8954 9 19Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p>Your cart is empty</p>
+                    <p class="text-muted">Add products to begin</p>
+                </div>
+                {% endif %}
+
+                <div class="pos-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-value">${{ subtotal }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Tax:</span>
+                        <span class="summary-value">$0.00</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="summary-label">Total:</span>
+                        <span class="summary-value total-value">${{ total_amount }}</span>
+                    </div>
+
+                    <div class="pos-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                        <a href="{% url 'pos_checkout' %}"
+                            class="btn btn-primary {% if not products_in_cart %}disabled{% endif %}" style="flex: 1;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.5rem;">
+                                <path
+                                    d="M3 10H21M7 3V5M17 3V5M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Checkout
+                        </a>
+                        <button class="btn btn-outline" style="flex: 1;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.5rem;">
+                                <path d="M9 14L4 9L9 4M5 9H15C18.3137 9 21 11.6863 21 15V20" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Hold Sale
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Product Section -->
+        <div class="pos-card">
+            <div class="card-header">
+                <h3 class="card-title">Add Product</h3>
+                <div class="scan-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M3 7V5C3 3.89543 3.89543 3 5 3H7M7 21H5C3.89543 21 3 20.1046 3 19V17M21 17V19C21 20.1046 20.1046 21 19 21H17M17 3H19C20.1046 3 21 3.89543 21 5V7M7 12H17"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" class="pos-form" id="pos-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_product">Product</label>
+                        {{ form.product }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_batch">Batch</label>
+                        {{ form.batch }}
+                    </div>
+                    <div class="form-row" style="display: flex; gap: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="id_quantity">Quantity</label>
+                            <input type="number" name="quantity" id="id_quantity" class="form-control" value="1"
+                                min="1">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="id_discount">Discount</label>
+                            <input type="number" name="discount" id="id_discount" class="form-control" value="0.00"
+                                min="0" step="0.01">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            style="margin-right: 0.5rem;">
+                            <path d="M12 6V12M12 12V18M12 12H18M12 12H6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Add to Cart
+                    </button>
+                </form>
+
+                {% if popular_products %}
+                <div class="popular-products-title"
+                    style="margin-top: 2rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style="vertical-align: middle; margin-right: 0.5rem;">
+                        <path
+                            d="M11.0489 4.92705C11.3483 4.00574 12.6517 4.00574 12.9511 4.92705L14.0206 8.21885C14.1545 8.63087 14.5385 8.90983 14.9717 8.90983H18.4329C19.4016 8.90983 19.8044 10.1494 19.0207 10.7188L16.2205 12.7533C15.87 13.0079 15.7234 13.4593 15.8572 13.8713L16.9268 17.1631C17.2261 18.0844 16.1717 18.8506 15.388 18.2812L12.5878 16.2467C12.2373 15.9921 11.7627 15.9921 11.4122 16.2467L8.61204 18.2812C7.82833 18.8506 6.77385 18.0844 7.0732 17.1631L8.14277 13.8713C8.27665 13.4593 8.12999 13.0079 7.7795 12.7533L4.97933 10.7188C4.19562 10.1494 4.59839 8.90983 5.56712 8.90983H9.02832C9.46154 8.90983 9.8455 8.63087 9.97937 8.21885L11.0489 4.92705Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Popular Products
+                </div>
+                <div class="popular-products">
+                    {% for product in popular_products %}
+                    <button class="product-btn quick-add-btn" data-product-id="{{ product.id }}"
+                        data-product-name="{{ product.name }}">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M9 20H7C5.89543 20 5 19.1046 5 18V10C5 8.89543 5.89543 8 7 8H9M9 20H15M9 20V8M15 20H17C18.1046 20 19 19.1046 19 18V6C19 4.89543 18.1046 4 17 4H12M9 8V6C9 4.89543 9.89543 4 11 4H12M12 4V8M12 8H15M15 8V20"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        {{ product.name }}
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            $('#time-display').text(timeString);
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Quick add popular products
+        $('.quick-add-btn').click(function () {
+            const productId = $(this).data('product-id');
+            const productName = $(this).data('product-name');
+
+            $('#id_product').val(productId).trigger('change');
+            $('#id_quantity').val(1);
+            $('#id_discount').val(0);
+
+            // Show a quick notification
+            const notification = $(`
+            <div style="position: fixed; bottom: 20px; right: 20px; background: var(--accent-color); color: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; display: flex; align-items: center; gap: 8px; animation: slideIn 0.3s ease-out;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Added ${productName} to cart
+            </div>
+        `);
+
+            $('body').append(notification);
+            setTimeout(() => {
+                notification.fadeOut(300, () => notification.remove());
+            }, 3000);
+
+            $('#pos-form').submit();
+        });
+
+        // Quantity controls for items in cart
+        $('.plus-btn').click(function () {
+            const itemId = $(this).data('item-id');
+            updateQuantity(itemId, 1);
+        });
+
+        $('.minus-btn').click(function () {
+            const itemId = $(this).data('item-id');
+            updateQuantity(itemId, -1);
+        });
+
+        $('.remove-btn').click(function () {
+            const itemId = $(this).data('item-id');
+            removeItem(itemId);
+        });
+
+        function updateQuantity(itemId, change) {
+            $.ajax({
+                url: /pos/update - item / ${ itemId } /,
+                method: 'POST',
+                data: {
+                'change': change,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+                success: function (data) {
+                    if (data.success) {
+                        location.reload();
+                    }
+                }
+        });
+    }
+
+    function removeItem(itemId) {
+        $.ajax({
+            url: /pos/remove - item / ${ itemId } /,
+            method: 'POST',
+            data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+            success: function (data) {
+                if (data.success) {
+                    $(.pos - item[data - item - id="${itemId}"]).fadeOut(300, function () {
+                        $(this).remove();
+                        if ($('.pos-item').length === 0) {
+                            location.reload();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // When product changes, update available batches
+    $('#id_product').change(function () {
+        const productId = $(this).val();
+        if (productId) {
+            $.ajax({
+                url: "{% url 'ajax_product_batches' 0 %}".replace('0', productId),
+                success: function (data) {
+                    const batchSelect = $('#id_batch');
+                    batchSelect.empty();
+                    if (data.length > 0) {
+                        $.each(data, function (index, batch) {
+                            batchSelect.append($('<option>', {
+                                value: batch.id,
+                                text: batch.text
+                            }));
+                        });
+                    } else {
+                        batchSelect.append($('<option>', {
+                            value: '',
+                            text: 'No available batches'
+                        }));
+                    }
+                }
+            });
+        }
+    });
+
+    // Initialize Select2 for product field
+    $('#id_product').select2({
+        placeholder: "Search products...",
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#pos-form')
+    });
+
+    // Initialize Select2 for batch field
+    $('#id_batch').select2({
+        placeholder: "Select batch...",
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#pos-form')
+    });
+});
+</script>
+{% endblock %}

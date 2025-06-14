@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescriptions{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --warning-color: #f59e0b;
+        --success-color: #10b981;
+        --border-color: #334155;
+    }
+
+    .prescription-list-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .prescription-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .prescription-list-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .prescription-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .prescription-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+    }
+
+    .prescription-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .prescription-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .prescription-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .badge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .badge-success {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+    }
+
+    .badge-danger {
+        background-color: rgba(255, 107, 107, 0.15);
+        color: var(--error-color);
+    }
+
+    .badge-warning {
+        background-color: rgba(234, 179, 8, 0.15);
+        color: var(--warning-color);
+    }
+
+    .badge-info {
+        background-color: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+    }
+
+    .badge-secondary {
+        background-color: rgba(148, 163, 184, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary {
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        background-color: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--accent-color);
+        color: var(--bg-primary);
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+        background-color: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--text-secondary);
+        color: var(--bg-primary);
+    }
+
+    .btn-outline-danger {
+        border: 1px solid var(--error-color);
+        color: var(--error-color);
+        background-color: transparent;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: var(--error-color);
+        color: white;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .prescription-list-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: flex-start;
+        }
+        
+        .prescription-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="prescription-list-container">
+    <div class="prescription-list-header">
+        <h2 class="prescription-list-title">Prescriptions</h2>
+        <a href="{% url 'prescription_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Prescription
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="prescription-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prescription in prescriptions %}
+                <tr>
+                    <td>#{{ prescription.id }}</td>
+                    <td>{{ prescription.patient }}</td>
+                    <td>{{ prescription.prescribing_doctor }}</td>
+                    <td>{{ prescription.date_prescribed|date:"M d, Y" }}</td>
+
+                    <td>
+                        <span class="badge 
+                            {% if prescription.status == 'filled' %}badge-success
+                            {% elif prescription.status == 'pending' %}badge-warning
+                            {% elif prescription.status == 'partially_filled' %}badge-info
+                            {% else %}badge-danger
+                            {% endif %}">
+                            <i class="bi 
+                                {% if prescription.status == 'filled' %}bi-check-circle
+                                {% elif prescription.status == 'pending' %}bi-clock
+                                {% elif prescription.status == 'partially_filled' %}bi-collection
+                                {% else %}bi-x-circle
+                                {% endif %}"></i>
+                            {{ prescription.get_status_display }}
+                        </span>
+                        <td>{{ prescription.get_total_items }}</td>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{% url 'prescription_detail' pk=prescription.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'prescription_update' pk=prescription.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'prescription_delete' pk=prescription.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-prescription2" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No prescriptions found</p>
+                        <a href="{% url 'prescription_create' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-lg"></i> Create First Prescription
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to table rows
+        const rows = document.querySelectorAll('.prescription-table tbody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(10px)';
+            row.style.transition = `opacity 0.3s ease ${index * 0.05}s, transform 0.3s ease ${index * 0.05}s`;
+            
+            setTimeout(() => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, 50);
+        });
+    });
+</script>
+{% endblock %}

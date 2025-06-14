@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+{% block title %}Billing Detail - {{ billing.invoice_number }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success-color: #2ec8a6;
+        --warning-color: #f59e0b;
+        --danger-color: #ff6b6b;
+        --info-color: #3b82f6;
+        --inactive-color: #64748b;
+    }
+
+    .billing-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .billing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .billing-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-outline:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .btn-danger {
+        background-color: transparent;
+        border: 1px solid var(--danger-color);
+        color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: rgba(255, 107, 107, 0.1);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-success:hover {
+        background-color: #25a38a;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .info-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .patient-link {
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .patient-link:hover {
+        color: #25a38a;
+        text-decoration: underline;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+
+    .badge-success {
+        background-color: rgba(46, 200, 166, 0.2);
+        color: var(--success-color);
+    }
+
+    .badge-warning {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: var(--warning-color);
+    }
+
+    .badge-secondary {
+        background-color: rgba(100, 116, 139, 0.2);
+        color: var(--inactive-color);
+    }
+
+    .badge-danger {
+        background-color: rgba(255, 107, 107, 0.2);
+        color: var(--danger-color);
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .summary-item {
+        text-align: right;
+    }
+
+    .summary-total {
+        font-weight: 600;
+        color: var(--accent-color);
+        font-size: 1.1rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .billing-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .billing-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .billing-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .billing-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .billing-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+    }
+
+    .notes-content {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        color: var(--text-primary);
+        border-left: 3px solid var(--accent-color);
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .billing-container, .billing-container * {
+            visibility: visible;
+        }
+        .billing-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none;
+            box-shadow: none;
+            background-color: white;
+            color: black;
+        }
+        .no-print {
+            display: none !important;
+        }
+        a {
+            text-decoration: none;
+            color: black !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .billing-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .action-buttons {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="billing-container">
+    <div class="billing-header">
+        <h1 class="billing-title">Billing - {{ billing.invoice_number }}</h1>
+        <div class="action-buttons no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                    <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                </svg>
+                Print Invoice
+            </button>
+            <a href="{% url 'billing_list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Billings
+            </a>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Billing Information</h3>
+            <div class="info-item">
+                <div class="info-label">Patient</div>
+                <div class="info-value">
+                    <a href="#" class="patient-link">
+                        {{ billing.patient.first_name }} {{ billing.patient.last_name }}
+                    </a>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date</div>
+                <div class="info-value">{{ billing.date|date:"Y-m-d" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Due Date</div>
+                <div class="info-value">{{ billing.due_date|date:"Y-m-d" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge 
+                        {% if billing.payment_status == 'paid' %}badge-success
+                        {% elif billing.payment_status == 'partially_paid' %}badge-warning
+                        {% elif billing.payment_status == 'pending' %}badge-secondary
+                        {% else %}badge-danger
+                        {% endif %}">
+                        {{ billing.get_payment_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3 class="info-title">Financial Summary</h3>
+            <div class="summary-grid">
+                <div>
+                    <div class="info-label">Amount</div>
+                    <div class="info-label">Tax Amount</div>
+                    <div class="info-label">Discount</div>
+                    <div class="info-label">Total Amount</div>
+                </div>
+                <div class="summary-item">
+                    <div class="info-value">${{ billing.amount }}</div>
+                    <div class="info-value">${{ billing.tax_amount }}</div>
+                    <div class="info-value">${{ billing.discount_amount }}</div>
+                    <div class="info-value summary-total">${{ billing.total_amount }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3 class="info-title">Payment History</h3>
+            {% if payments %}
+            <table class="billing-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                        <th class="no-print">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"Y-m-d" }}</td>
+                        <td>${{ payment.amount }}</td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>{{ payment.reference_number|default:"-" }}</td>
+                        <td class="table-actions no-print">
+                            <a href="{% url 'payment_update' payment.pk %}" class="btn btn-sm btn-outline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-sm btn-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <p>No payments recorded for this bill.</p>
+            </div>
+            {% endif %}
+            
+            <div class="action-buttons no-print" style="margin-top: 1rem;">
+                <a href="{% url 'payment_create' billing.pk %}" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                    Record Payment
+                </a>
+            </div>
+        </div>
+        
+        {% if billing.notes %}
+        <div class="info-card">
+            <h3 class="info-title">Notes</h3>
+            <div class="notes-content">
+                {{ billing.notes }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="billing-header no-print">
+        <div></div>
+        <div class="action-buttons">
+            <a href="{% url 'billing_list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Billings
+            </a>
+            <a href="{% url 'billing_update' billing.pk %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+                Edit Billing
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
