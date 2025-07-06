@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% block title %}Leave Requests{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #0b1120;
+        --bg-secondary: #1e293b;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --warning-color: #f59e0b;
+        --success-color: #10b981;
+        --info-color: #3b82f6;
+        --border-color: #334155;
+    }
+
+    .leave-container {
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        margin: 2rem auto;
+        max-width: 100%;
+    }
+
+    .leave-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .leave-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .leave-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .leave-table thead th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+    }
+
+    .leave-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .leave-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .leave-table tbody tr:hover {
+        background-color: rgba(46, 200, 166, 0.05);
+    }
+
+    .badge {
+        padding: 0.35rem 0.65rem;
+        font-weight: 500;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .badge-approved {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+    }
+
+    .badge-pending {
+        background-color: rgba(234, 179, 8, 0.15);
+        color: var(--warning-color);
+    }
+
+    .badge-rejected {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: var(--error-color);
+    }
+
+    .badge-paid {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: var(--info-color);
+    }
+
+    .badge-not-applicable {
+        background-color: rgba(100, 116, 139, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-sm {
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view {
+        border: 1px solid var(--info-color);
+        color: var(--info-color);
+    }
+
+    .btn-view:hover {
+        background-color: var(--info-color);
+        color: white;
+    }
+
+    .btn-edit {
+        border: 1px solid var(--warning-color);
+        color: var(--warning-color);
+    }
+
+    .btn-edit:hover {
+        background-color: var(--warning-color);
+        color: black;
+    }
+
+    .btn-delete {
+        border: 1px solid var(--error-color);
+        color: var(--error-color);
+    }
+
+    .btn-delete:hover {
+        background-color: var(--error-color);
+        color: white;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .duration {
+        font-family: monospace;
+    }
+
+    @media (max-width: 768px) {
+        .leave-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .table-actions {
+            justify-content: flex-start;
+        }
+        
+        .leave-table thead {
+            display: none;
+        }
+        
+        .leave-table, .leave-table tbody, .leave-table tr, .leave-table td {
+            display: block;
+            width: 100%;
+        }
+        
+        .leave-table tr {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .leave-table td {
+            text-align: right;
+            padding-left: 50%;
+            position: relative;
+        }
+        
+        .leave-table td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 1rem;
+            width: calc(50% - 1rem);
+            padding-right: 1rem;
+            text-align: left;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .table-actions {
+            justify-content: flex-end;
+        }
+    }
+</style>
+
+<div class="leave-container">
+    <div class="leave-header">
+        <h1 class="leave-title">Leave Requests</h1>
+        {% if user.role == 'admin' %}
+        <div>
+            <a href="{% url 'leave_create' %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Create Leave
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="leave-table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>Dates</th>
+                    <th class="text-end">Duration</th>
+                    <th>Status</th>
+                    <th>Payment Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in leaves %}
+                <tr>
+                    <td data-label="Employee">{{ leave.employee.get_full_name }}</td>
+                    <td data-label="Leave Type">{{ leave.get_leave_type_display }}</td>
+                    <td data-label="Dates">
+                        {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}
+                    </td>
+                    <td class="text-end duration" data-label="Duration">
+                        {{ leave.duration }} day{{ leave.duration|pluralize }}
+                    </td>
+                    <td data-label="Status">
+                        {% if leave.status == 'approved' %}
+                        <span class="badge badge-approved">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                            </svg>
+                            {{ leave.get_status_display }}
+                        </span>
+                        {% elif leave.status == 'rejected' %}
+                        <span class="badge badge-rejected">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            {{ leave.get_status_display }}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-pending">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0v9a.5.5 0 0 0 1 0v-9z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm1-8a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 9 8z"/>
+                            </svg>
+                            {{ leave.get_status_display }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Payment Status">
+                        {% if leave.payment_status == 'paid' %}
+                        <span class="badge badge-paid">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2v9.255S12 12 8 12s-5 1.755-5 1.755V2a1 1 0 0 1 1-1h5.5v2z"/>
+                            </svg>
+                            {{ leave.get_payment_status_display }}
+                        </span>
+                        {% elif leave.payment_status == 'pending' %}
+                        <span class="badge badge-pending">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0v9a.5.5 0 0 0 1 0v-9z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm1-8a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 9 8z"/>
+                            </svg>
+                            {{ leave.get_payment_status_display }}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-not-applicable">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            {{ leave.get_payment_status_display }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="table-actions" data-label="Actions">
+                        <a href="{% url 'leave_detail' leave.pk %}" class="btn btn-sm btn-view" title="View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                            </svg>
+                        </a>
+                        {% if leave.status == 'pending' and user == leave.employee or user.role == 'admin' %}
+                        <a href="{% url 'leave_update' leave.pk %}" class="btn btn-sm btn-edit" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                            </svg>
+                        </a>
+                        <a href="{% url 'leave_delete' leave.pk %}" class="btn btn-sm btn-delete" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        <p>No leave requests found</p>
+                        {% if user.role != 'admin' %}
+                        <a href="{% url 'leave_create' %}" class="btn btn-primary mt-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                            </svg>
+                            Apply for Leave
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// document.addEventListener('DOMContentLoaded', function() {
+//     // Make table rows clickable (except when clicking on actions)
+//     document.querySelectorAll('.leave-table tbody tr').forEach(row => {
+//         row.addEventListener('click', (e) => {
+//             // Don't navigate if clicking on action buttons
+//             if (e.target.closest('.table-actions')) {
+//                 return;
+//             }
+            
+//             // Find the view link and navigate to it
+//             const viewLink = row.querySelector('a[title="View"]');
+//             if (viewLink) {
+//                 window.location.href = viewLink.href;
+//             }
+//         });
+        
+//         // Add hover effect
+//         row.style.cursor = 'pointer';
+//     });
+// });
+</script>
+{% endblock %}

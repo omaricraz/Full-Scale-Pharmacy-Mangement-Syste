@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum
+from django_countries.fields import CountryField
 
 User = get_user_model()
 
@@ -76,6 +77,7 @@ class Product(models.Model):
     )
     
     name = models.CharField(max_length=100)
+    made_in = CountryField(blank=True, null=True)
     generic_name = models.CharField(max_length=100, blank=True, null=True)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
     product_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='drug')
@@ -159,23 +161,26 @@ class Batch(models.Model):
         verbose_name_plural = "Batches"
         ordering = ['expiry_date']
 
+# models.py
+from datetime import date
+
 class Patient(models.Model):
     GENDER_CHOICES = (
-        ('male', 'Male'),
-        ('female', 'Female'),
-        ('other', 'Other'),
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
     )
     
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     date_of_birth = models.DateField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    phone = models.CharField(max_length=20)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-    address = models.TextField()
-    city = models.CharField(max_length=50)
-    state = models.CharField(max_length=50)
-    postal_code = models.CharField(max_length=20)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
+    state = models.CharField(max_length=50, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
     insurance_provider = models.CharField(max_length=100, blank=True, null=True)
     insurance_number = models.CharField(max_length=50, blank=True, null=True)
     medical_history = models.TextField(blank=True, null=True)
@@ -185,6 +190,12 @@ class Patient(models.Model):
     
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def age(self):
+        today = date(2025, 1, 1)  # Using 2025 as the current year as specified
+        born = self.date_of_birth
+        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
     
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -198,7 +209,7 @@ User = get_user_model()
 class Prescription(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
-        ('filled', 'Filled'),
+        ('completed', 'Completed'),
         ('partially_filled', 'Partially Filled'),
         ('cancelled', 'Cancelled'),
     )
@@ -333,6 +344,8 @@ class StockAdjustment(models.Model):
     REASON_CHOICES = (
         ('expired', 'Expired'),
         ('damaged', 'Damaged'),
+        ('correction', 'Correction'),
+        ('return to Supplier', 'Return to Supplier'),
         ('lost', 'Lost'),
         ('theft', 'Theft'),
         ('other', 'Other'),
@@ -358,23 +371,25 @@ class Notification(models.Model):
         ('low_stock', 'Low Stock'),
         ('refill', 'Prescription Refill'),
         ('payment', 'Payment Due'),
+        ('leave_approval', 'Leave Approval'),
+        ('leave_rejection', 'Leave Rejection'),
+        ('leave_request', 'Leave Request'),
         ('other', 'Other'),
     )
     
     title = models.CharField(max_length=100)
     message = models.TextField()
     notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    related_object_id = models.PositiveIntegerField(blank=True, null=True)
-    related_content_type = models.CharField(max_length=50, blank=True, null=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return self.title
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    url = models.URLField(blank=True, null=True)
     
     class Meta:
         ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.title}"
 
 
 
@@ -588,4 +603,6 @@ class AlertRule(models.Model):
             return f"Expires within {self.days_before} days"
         return "Custom condition"
     
+
+
 

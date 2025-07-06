@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reject Leave Request{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+    }
+
+    .reject-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        animation: fadeIn 0.4s ease-out forwards;
+        border: 1px solid var(--border-color);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    .confirmation-message {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        border-left: 4px solid var(--error-color);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-danger {
+        background-color: var(--error-color);
+        border: none;
+        color: var(--text-primary);
+    }
+
+    .btn-danger:hover {
+        background-color: #e05555;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .reject-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="reject-container">
+    <div class="form-header">
+        <h2 class="form-title">Reject Leave Request</h2>
+    </div>
+
+    <div class="confirmation-message">
+        <p>Are you sure you want to reject this leave request from <strong>{{ leave.employee }}</strong>?</p>
+        <p>Leave Period: {{ leave.start_date }} to {{ leave.end_date }} ({{ leave.leave_type|title }})</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="comments">Reason for Rejection:</label>
+            <textarea class="form-control" id="comments" name="comments" rows="4" required></textarea>
+            <small class="form-text" style="color: var(--text-secondary);">Please provide a clear reason for rejecting this leave request.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Confirm Rejection
+            </button>
+            <a href="{% url 'leave_detail' leave.id %}" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus on the comments textarea when the page loads
+        document.getElementById('comments').focus();
+        
+        // Add validation to ensure comments are provided
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const comments = document.getElementById('comments').value.trim();
+            if (!comments) {
+                e.preventDefault();
+                alert('Please provide a reason for rejecting this leave request.');
+                document.getElementById('comments').focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

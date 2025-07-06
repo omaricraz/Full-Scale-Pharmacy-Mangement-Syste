@@ -64,6 +64,7 @@ class ProductForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'sales_count': forms.HiddenInput(),  # Hide from form since we have default
+            'made_in': forms.Select(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, **kwargs):

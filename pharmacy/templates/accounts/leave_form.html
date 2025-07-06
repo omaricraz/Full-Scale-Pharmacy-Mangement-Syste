@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+    }
+
+    .batch-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        animation: fadeIn 0.4s ease-out forwards;
+        border: 1px solid var(--border-color);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    /* Crispy forms adjustments */
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    .form-text {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+        color: var(--error-color);
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: var(--error-color);
+    }
+
+    /* Checkbox styling */
+    .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-check-input {
+        width: 1.1em;
+        height: 1.1em;
+        margin-top: 0;
+        accent-color: var(--accent-color);
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .form-check-label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    /* File input styling */
+    .custom-file-input {
+        display: none;
+    }
+
+    .custom-file-label {
+        display: block;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .custom-file-label:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .file-selected {
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    /* Custom row and column structure */
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+
+    .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-bottom: 1rem;
+    }
+
+    .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-bottom: 1rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .batch-form-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="batch-form-container">
+    <div class="form-header">
+        <h2 class="form-title">{{ title }}</h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <!-- Employee Field -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.employee|as_crispy_field }}
+                </div>
+            </div>
+            
+            <!-- Leave Type Field -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.leave_type|as_crispy_field }}
+                </div>
+            </div>
+            
+            <!-- Start Date Field -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.start_date|as_crispy_field }}
+                </div>
+            </div>
+            
+            <!-- End Date Field -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.end_date|as_crispy_field }}
+                </div>
+            </div>
+            
+            <!-- Reason Field -->
+            <div class="col-md-12">
+                <div class="form-group">
+                    {{ form.reason|as_crispy_field }}
+                </div>
+            </div>
+            
+            <!-- Medical Certificate Field -->
+            <div class="col-md-12" id="medical-certificate-field">
+                <div class="form-group">
+                    <label for="id_medical_certificate">Medical Certificate</label>
+                    <input type="file" name="medical_certificate" class="custom-file-input" id="id_medical_certificate">
+                    <label for="id_medical_certificate" class="custom-file-label" id="medical-certificate-label">
+                        {% if form.instance.medical_certificate %}
+                            {{ form.instance.medical_certificate.name }}
+                        {% else %}
+                            Upload Medical Certificate (required for sick/maternity leaves)
+                        {% endif %}
+                    </label>
+                    {% if form.instance.medical_certificate %}
+                        <small class="form-text text-muted">
+                            Currently: <a href="{{ form.instance.medical_certificate.url }}" target="_blank">{{ form.instance.medical_certificate.name }}</a>
+                        </small>
+                    {% endif %}
+                    {% if form.medical_certificate.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.medical_certificate.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Status Field (for approval form) -->
+            {% if form.status %}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.status|as_crispy_field }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Payment Status Field (for approval form) -->
+            {% if form.payment_status %}
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.payment_status|as_crispy_field }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Comments Field (for approval form) -->
+            {% if form.comments %}
+            <div class="col-md-12">
+                <div class="form-group">
+                    {{ form.comments|as_crispy_field }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                </svg>
+                Submit
+            </button>
+            <a href="{% if leave %}{% url 'leave_detail' leave.pk %}{% else %}{% url 'leave_list' %}{% endif %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Leave type durations mapping (2025 version)
+        const leaveDurations = {
+            'annual': 30,
+            'sick_1': 90,  // First 3 months
+            'sick_2': 90,  // Next 3 months
+            'maternity': 120,  // 4 months
+            'maternity_miscarriage_9': 90,
+            'maternity_miscarriage_6_8': 60,
+            'maternity_miscarriage_3_5': 30,
+            'family': 7,
+            'unpaid': 60,
+            'compensatory': 30
+        };
+
+        // Medical certificate required leave types
+        const medicalCertRequired = [
+            'sick_1', 'sick_2', 'maternity', 'maternity_miscarriage_9',
+            'maternity_miscarriage_6_8', 'maternity_miscarriage_3_5'
+        ];
+
+        // Set minimum dates for date pickers
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('id_start_date').min = today;
+        document.getElementById('id_end_date').min = today;
+        
+        // Function to calculate end date
+        function calculateEndDate(startDate, duration) {
+            if (!startDate || !duration) return null;
+            
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + duration - 1); // Subtract 1 to include start day
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Update end date when leave type or start date changes
+        function updateEndDate() {
+            const leaveType = document.getElementById('id_leave_type').value;
+            const startDate = document.getElementById('id_start_date').value;
+            const duration = leaveDurations[leaveType] || 30;
+            
+            if (startDate) {
+                const endDate = calculateEndDate(startDate, duration);
+                document.getElementById('id_end_date').value = endDate;
+                document.getElementById('id_end_date').min = startDate;
+            }
+        }
+
+        // Toggle medical certificate field visibility
+function toggleMedicalCertificateField() {
+    const leaveType = document.getElementById('id_leave_type').value;
+    const medicalCertRequired = [
+        'sick_1', 'sick_2', 'maternity', 'maternity_miscarriage_9',
+        'maternity_miscarriage_6_8', 'maternity_miscarriage_3_5'
+    ];
+    const medicalCertField = document.getElementById('medical-certificate-field');
+    
+    if (medicalCertRequired.includes(leaveType)) {
+        medicalCertField.style.display = 'block';
+        document.getElementById('id_medical_certificate').required = true;
+    } else {
+        medicalCertField.style.display = 'none';
+        document.getElementById('id_medical_certificate').required = false;
+    }
+}
+        
+        // Update file input label when file is selected
+        document.getElementById('id_medical_certificate').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+            const label = document.getElementById('medical-certificate-label');
+            label.textContent = fileName;
+            label.classList.add('file-selected');
+        });
+
+        // Initialize form fields
+        function initializeForm() {
+            updateEndDate();
+            toggleMedicalCertificateField();
+            
+            // If this is an approval form with payment status
+            const paymentStatusField = document.getElementById('id_payment_status');
+            if (paymentStatusField) {
+                // Disable payment status for certain leave types
+                const leaveType = '{{ form.instance.leave_type }}';
+                if (['unpaid', 'compensatory'].includes(leaveType)) {
+                    paymentStatusField.disabled = true;
+                }
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('id_leave_type').addEventListener('change', function() {
+            updateEndDate();
+            toggleMedicalCertificateField();
+        });
+        document.getElementById('id_start_date').addEventListener('change', updateEndDate);
+        
+        // Initialize form on load
+        initializeForm();
+    });
+</script>
+{% endblock %}

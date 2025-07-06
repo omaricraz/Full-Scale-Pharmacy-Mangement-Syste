@@ -230,13 +230,13 @@
 
                     <td>
                         <span class="badge 
-                            {% if prescription.status == 'filled' %}badge-success
+                            {% if prescription.status == 'completed' %}badge-success
                             {% elif prescription.status == 'pending' %}badge-warning
                             {% elif prescription.status == 'partially_filled' %}badge-info
                             {% else %}badge-danger
                             {% endif %}">
                             <i class="bi 
-                                {% if prescription.status == 'filled' %}bi-check-circle
+                                {% if prescription.status == 'completed' %}bi-check-circle
                                 {% elif prescription.status == 'pending' %}bi-clock
                                 {% elif prescription.status == 'partially_filled' %}bi-collection
                                 {% else %}bi-x-circle

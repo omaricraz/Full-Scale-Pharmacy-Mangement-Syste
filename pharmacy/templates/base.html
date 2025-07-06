@@ -478,6 +478,13 @@
                                         <span class="nav-link-text ms-2">Payroll</span>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}"
+                                        href="{% url 'leave_list' %}">
+                                        <i class="bi bi-calendar"></i>
+                                        <span class="nav-link-text ms-2">Leave</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -548,6 +555,13 @@
                                         href="{% url 'expiry_report' %}">
                                         <i class="bi bi-exclamation-triangle"></i>
                                         <span class="nav-link-text ms-2">Expiry</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if 'expiry_report' in request.resolver_match.url_name %}active{% endif %}"
+                                        href="{% url 'attendance_report' %}">
+                                        <i class="bi bi-calendar-check"></i>
+                                        <span class="nav-link-text ms-2">Attendance</span>
                                     </a>
                                 </li>
                             </ul>

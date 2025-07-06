@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Approve Leave Request #{{ leave.id }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-primary: #030817;
+        --bg-secondary: #0b1120;
+        --accent-color: #2ec8a6;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --error-color: #ff6b6b;
+        --border-color: #1e293b;
+        --info-bg: rgba(46, 200, 166, 0.1);
+    }
+
+    .approval-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: var(--bg-primary);
+        border-radius: 16px;
+        animation: fadeIn 0.4s ease-out forwards;
+        border: 1px solid var(--border-color);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin: 0;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-info {
+        background-color: var(--info-bg);
+        border: 1px solid rgba(46, 200, 166, 0.3);
+        color: var(--text-primary);
+            border: 1px dashed var(--accent-color);
+
+    }
+
+    .alert-secondary {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .alert-heading {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--accent-color);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--accent-color);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(46, 200, 166, 0.2);
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+        background-color: #1a202c;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-success {
+        background-color: var(--accent-color);
+        border: none;
+        color: var(--bg-primary);
+    }
+
+    .btn-success:hover {
+        background-color: #25a38a;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-primary {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .btn-outline-primary:hover {
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .approval-container {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="approval-container">
+    <div class="form-header">
+        <h2 class="form-title">Confirm Leave Approval</h2>
+    </div>
+
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Leave Request Details</h4>
+        <p>
+            <strong>Employee:</strong> {{ leave.employee.get_full_name }}<br>
+            <strong>Leave Type:</strong> {{ leave.get_leave_type_display }}<br>
+            <strong>Dates:</strong> {{ leave.start_date|date:"Y-m-d" }} to {{ leave.end_date|date:"Y-m-d" }}<br>
+            <strong>Duration:</strong> {{ leave.duration }} day{{ leave.duration|pluralize }}
+        </p>
+    </div>
+
+    {% if leave.medical_certificate %}
+    <div class="alert alert-secondary">
+        <h5 class="alert-heading">Medical Certificate</h5>
+        <p>
+            <a href="{{ leave.medical_certificate.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg>
+                View Certificate
+            </a>
+        </p>
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="payment_status">Payment Status</label>
+            <select name="payment_status" id="payment_status" class="form-control">
+                <option value="pending" selected>Pending</option>
+                <option value="paid">Paid</option>
+                <option value="not_applicable">Not Applicable</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="comments">Comments (Optional)</label>
+            <textarea name="comments" id="comments" rows="3" class="form-control" 
+                      placeholder="Add any additional comments..."></textarea>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'leave_detail' leave.id %}" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                </svg>
+                Confirm Approval
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Disable payment status for unpaid/compensatory leaves
+        const leaveType = "{{ leave.leave_type }}";
+        const paymentStatus = document.getElementById('payment_status');
+        
+        if (['unpaid', 'compensatory'].includes(leaveType)) {
+            paymentStatus.value = 'not_applicable';
+            paymentStatus.disabled = true;
+        }
+    });
+</script>
+{% endblock %}

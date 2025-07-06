@@ -167,6 +167,18 @@
         height: 16px;
     }
 
+    /* Country flag styles */
+    .country-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .country-flag img {
+        border-radius: 2px;
+        box-shadow: 0 0 1px rgba(0,0,0,0.5);
+    }
+
     @media (max-width: 768px) {
         .stock-adjustment-header {
             flex-direction: column;
@@ -197,6 +209,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Product</th>
+                    <th>Made in</th>
                     <th>Batch</th>
                     <th>Quantity</th>
                     <th>Reason</th>
@@ -208,6 +221,21 @@
                 <tr>
                     <td>{{ adjustment.date|date:"Y-m-d H:i" }}</td>
                     <td>{{ adjustment.product.name }}</td>
+                    <td>
+                        {% if adjustment.product.made_in %}
+                            <span class="country-flag" title="{{ adjustment.product.made_in.name }}">
+                                <img src="https://flagcdn.com/16x12/{{ adjustment.product.made_in.code|lower }}.png" 
+                                     srcset="https://flagcdn.com/32x24/{{ adjustment.product.made_in.code|lower }}.png 2x,
+                                             https://flagcdn.com/48x36/{{ adjustment.product.made_in.code|lower }}.png 3x"
+                                     width="16"
+                                     height="12"
+                                     alt="{{ adjustment.product.made_in.name }}">
+                                {{ adjustment.product.made_in.code|upper }}
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td>
                         {% if adjustment.batch %}
                             {{ adjustment.batch.batch_number }} (Exp: {{ adjustment.batch.expiry_date|date:"Y-m-d" }})

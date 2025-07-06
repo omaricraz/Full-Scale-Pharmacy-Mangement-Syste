@@ -301,6 +301,17 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.5);
+}
 </style>
 
 <div class="sale-container">
@@ -395,6 +406,7 @@
                     <tr>
                         <th>#</th>
                         <th>Product</th>
+                        <th>Made in</th>
                         <th>Batch</th>
                         <th>Quantity</th>
                         <th>Unit Price</th>
@@ -407,6 +419,21 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>{{ item.product.name }}</td>
+                        <td>
+                            {% if item.product.made_in %}
+                            <span class="country-flag" title="{{ item.product.made_in.name }}">
+                                <img src="https://flagcdn.com/16x12/{{ item.product.made_in.code|lower }}.png" 
+                                srcset="https://flagcdn.com/32x24/{{ item.product.made_in.code|lower }}.png 2x,
+                                https://flagcdn.com/48x36/{{ item.product.made_in.code|lower }}.png 3x"
+                                width="16"
+                                height="12"
+                                alt="{{ item.product.made_in.name }}">
+                                {{ item.product.made_in.code|upper }}
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
                         <td>
                             {% if item.batch %}
                                 {{ item.batch.batch_number }} (Exp: {{ item.batch.expiry_date|date:"Y-m-d" }})

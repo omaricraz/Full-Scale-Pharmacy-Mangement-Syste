@@ -237,6 +237,16 @@
             grid-template-columns: 1fr;
         }
     }
+    .country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.5);
+}
 </style>
 
 <div class="supplier-detail-container">
@@ -344,6 +354,7 @@
                 <thead>
                     <tr>
                         <th>Product</th>
+                        <th>Made in</th>
                         <th>Generic Name</th>
                         <th>Category</th>
                         <th>Last Supplied</th>
@@ -353,6 +364,21 @@
                     {% for product in products %}
                     <tr>
                         <td><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></td>
+                        <td>
+                    {% if product.made_in %}
+                        <span class="country-flag" title="{{ product.made_in.name }}">
+                            <img src="https://flagcdn.com/16x12/{{ product.made_in.code|lower }}.png" 
+                                 srcset="https://flagcdn.com/32x24/{{ product.made_in.code|lower }}.png 2x,
+                                         https://flagcdn.com/48x36/{{ product.made_in.code|lower }}.png 3x"
+                                 width="16"
+                                 height="12"
+                                 alt="{{ product.made_in.name }}">
+                            {{ product.made_in.code|upper }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
                         <td>{{ product.generic_name|default:"-" }}</td>
                         <td>{{ product.category|default:"-" }}</td>
                         <td>

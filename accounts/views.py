@@ -2,11 +2,15 @@ from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.urls import reverse
+
+from django.core.exceptions import PermissionDenied
+
 
 from pharmacy.models import Notification, Payment, Prescription, Product, Sale
 from django.db.models import Sum, F
-from .models import User, Attendance, Payroll, PerformanceReview
-from .forms import UserRegistrationForm, UserUpdateForm, AttendanceForm, PayrollForm, PerformanceReviewForm
+from .models import Leave, User, Attendance, Payroll, PerformanceReview
+from .forms import LeaveApprovalForm, LeaveForm, UserRegistrationForm, UserUpdateForm, AttendanceForm, PayrollForm, PerformanceReviewForm
 
 def is_admin(user):
     return user.role == 'admin'
@@ -186,6 +190,16 @@ def payroll_create(request):
     return render(request, 'accounts/payroll_form.html', {'form': form, 'title': 'Create Payroll'})
 
 @login_required
+def payroll_detail(request, pk):
+    payroll = get_object_or_404(Payroll, pk=pk)
+    
+    if request.user != payroll.employee and request.user.role != 'admin':
+        raise PermissionDenied
+
+    return render(request, 'accounts/payroll_detail.html', {'payroll': payroll})
+
+
+@login_required
 @user_passes_test(is_admin)
 def payroll_update(request, pk):
     payroll = get_object_or_404(Payroll, pk=pk)
@@ -282,3 +296,396 @@ def profile_update(request):
         form = UserUpdateForm(instance=request.user)
     
     return render(request, 'accounts/profile_update.html', {'form': form})
+
+
+# Add to views.py after the performance_review_delete view
+
+@login_required
+def leave_list(request):
+    if request.user.role == 'admin':
+        leaves = Leave.objects.all()
+    else:
+        leaves = Leave.objects.filter(employee=request.user)
+    return render(request, 'accounts/leave_list.html', {'leaves': leaves})
+
+
+@login_required
+def leave_create(request):
+    if request.method == 'POST':
+        form = LeaveForm(request.POST, user=request.user)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            if request.user.role != 'admin':
+                leave.employee = request.user
+            leave.save()
+
+            if request.user.role != 'admin':
+                admin_users = User.objects.filter(role='admin')
+                for admin in admin_users:
+                    Notification.objects.create(
+                        recipient=admin,
+                        title="New Leave Application",
+                        message=f"{request.user.get_full_name()} has applied for {leave.leave_type} leave from {leave.start_date} to {leave.end_date}.",
+                        url=reverse('leave_detail', args=[leave.id])
+                    )
+            messages.success(request, 'Leave application submitted successfully!')
+            return redirect('leave_list')
+    else:
+        form = LeaveForm(user=request.user)
+    return render(request, 'accounts/leave_form.html', {'form': form, 'title': 'Apply for Leave'})
+
+
+@login_required
+def leave_detail(request, pk):
+    leave = get_object_or_404(Leave, pk=pk)
+
+    if request.user != leave.employee and request.user.role != 'admin':
+        raise PermissionDenied
+
+    if request.method == 'POST' and request.user.role == 'admin':
+        form = LeaveApprovalForm(request.POST, instance=leave)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            if leave.status == 'approved' and not leave.approved_by:
+                leave.approved_by = request.user
+                leave.approved_on = date.today()
+            leave.save()
+
+            Notification.objects.create(
+                recipient=leave.employee,
+                title=f"Leave Application {leave.get_status_display()}",
+                message=f"Your {leave.leave_type} leave from {leave.start_date} to {leave.end_date} has been {leave.status}.",
+                url=reverse('leave_detail', args=[leave.id])
+            )
+
+            messages.success(request, 'Leave application updated successfully!')
+            return redirect('leave_detail', pk=leave.id)
+    else:
+        form = LeaveApprovalForm(instance=leave) if request.user.role == 'admin' else None
+
+    return render(request, 'accounts/leave_detail.html', {
+        'leave': leave,
+        'form': form,
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def leave_approve(request, pk):
+    leave = get_object_or_404(Leave, pk=pk)
+    if request.method == 'POST':
+        leave.status = 'approved'
+        leave.approved_by = request.user
+        leave.approved_on = date.today()
+
+        if leave.leave_type in ['paid', 'sick', 'maternity', 'paternity', 'bereavement']:
+            leave.payment_status = 'pending'
+        else:
+            leave.payment_status = 'not_applicable'
+
+        leave.save()
+
+        Notification.objects.create(
+            recipient=leave.employee,
+            title="Leave Approved",
+            message=f"Your {leave.get_leave_type_display()} leave has been approved.",
+            url=reverse('leave_detail', args=[leave.id])
+        )
+
+        messages.success(request, 'Leave has been approved!')
+        return redirect('leave_detail', pk=leave.id)
+
+    return render(request, 'accounts/leave_confirm_approve.html', {'leave': leave})
+
+
+@login_required
+def leave_update(request, pk):
+    leave = get_object_or_404(Leave, pk=pk)
+
+    if request.user != leave.employee and request.user.role != 'admin':
+        raise PermissionDenied
+
+    if leave.status != 'pending' and request.user.role != 'admin':
+        messages.error(request, 'You can only edit pending leave applications.')
+        return redirect('leave_detail', pk=leave.id)
+
+    if request.method == 'POST':
+        form = LeaveForm(request.POST, instance=leave, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Leave application updated successfully!')
+            return redirect('leave_detail', pk=leave.id)
+    else:
+        form = LeaveForm(instance=leave, user=request.user)
+
+    return render(request, 'accounts/leave_form.html', {
+        'form': form,
+        'title': 'Update Leave Application',
+        'leave': leave
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def leave_reject(request, pk):
+    leave = get_object_or_404(Leave, pk=pk)
+    if request.method == 'POST':
+        leave.status = 'rejected'
+        leave.approved_by = request.user
+        leave.approved_on = date.today()
+        leave.comments = request.POST.get('comments', '')
+        leave.save()
+
+        Notification.objects.create(
+            recipient=leave.employee,
+            title="Leave Rejected",
+            message=f"Your leave from {leave.start_date} to {leave.end_date} has been rejected.",
+            url=reverse('leave_detail', args=[leave.id])
+        )
+
+        messages.success(request, 'Leave application rejected!')
+        return redirect('leave_detail', pk=leave.id)
+
+    return render(request, 'accounts/leave_reject.html', {'leave': leave})
+
+
+@login_required
+def leave_delete(request, pk):
+    leave = get_object_or_404(Leave, pk=pk)
+
+    if leave.status != 'pending' and request.user.role != 'admin':
+        messages.error(request, 'You can only delete pending leave applications.')
+        return redirect('leave_list')
+
+    if request.method == 'POST':
+        leave.delete()
+        messages.success(request, 'Leave application deleted successfully!')
+        return redirect('leave_list')
+
+    return render(request, 'accounts/leave_confirm_delete.html', {'leave': leave})
+
+
+
+
+from django.shortcuts import render, redirect
+from django.db.models import Count, Q
+from datetime import datetime, time, timedelta
+from .models import Attendance, User
+from django.http import HttpResponse
+import csv
+import json
+from django.contrib import messages
+from django.db.models.functions import TruncDate
+
+def attendance_report(request):
+    employees = User.objects.filter(is_active=True).order_by('first_name')
+    attendances = Attendance.objects.none()
+    summary = {}
+    trend_data = []
+    late_employees = []
+    top_performers = []
+    
+    if 'start_date' in request.GET and 'end_date' in request.GET:
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
+            # Validate date range (max 6 months)
+            if (end_date - start_date).days > 180:
+                messages.error(request, "Date range cannot exceed 6 months")
+                return redirect('attendance_report')
+            
+            # Base query
+            attendances = Attendance.objects.filter(
+                date__range=[start_date, end_date]
+            ).select_related('employee').order_by('-date', 'employee__first_name')
+            
+            # Apply filters
+            if 'employee' in request.GET and request.GET['employee']:
+                attendances = attendances.filter(employee_id=request.GET['employee'])
+                
+            if 'status' in request.GET and request.GET['status']:
+                attendances = attendances.filter(status=request.GET['status'])
+            
+            # Calculate summary statistics
+            total_records = attendances.count()
+            present_count = attendances.filter(status='present').count()
+            absent_count = attendances.filter(status='absent').count()
+            late_count = attendances.filter(status='late').count()
+            leave_count = attendances.filter(status='leave').count()
+            half_day_count = attendances.filter(status='half_day').count()
+            
+            # Calculate average working hours
+            working_hours_list = []
+            for att in attendances.filter(status__in=['present', 'late', 'half_day']):
+                working_hours = att.get_working_hours()
+                if working_hours:
+                    working_hours_list.append(working_hours.total_seconds())
+            
+            if working_hours_list:
+                avg_seconds = sum(working_hours_list) / len(working_hours_list)
+                hours = int(avg_seconds // 3600)
+                minutes = int((avg_seconds % 3600) // 60)
+                avg_working_hours_str = f"{hours}h {minutes}m"
+            else:
+                avg_working_hours_str = "-"
+            
+            summary = {
+                'total_records': total_records,
+                'present_count': present_count,
+                'absent_count': absent_count,
+                'late_count': late_count,
+                'leave_count': leave_count,
+                'half_day_count': half_day_count,
+                'present_percentage': round((present_count / total_records * 100), 2) if total_records else 0,
+                'absent_percentage': round((absent_count / total_records * 100), 2) if total_records else 0,
+                'late_percentage': round((late_count / total_records * 100), 2) if total_records else 0,
+                'avg_hours': avg_working_hours_str
+            }
+            
+            # Prepare data for attendance trend chart
+            date_range = [start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1)]
+            
+            trend_dates = []
+            trend_present = []
+            trend_absent = []
+            
+            for single_date in date_range:
+                date_str = single_date.strftime('%Y-%m-%d')
+                trend_dates.append(date_str)
+                
+                day_attendances = attendances.filter(date=single_date)
+                present = day_attendances.filter(status__in=['present', 'late', 'half_day']).count()
+                absent = day_attendances.filter(status='absent').count()
+                
+                trend_present.append(present)
+                trend_absent.append(absent)
+            
+            # Prepare data for late arrivals chart
+            late_employees = list(attendances.filter(status='late').values(
+                'employee__first_name', 'employee__last_name'
+            ).annotate(
+                late_count=Count('id')
+            ).order_by('-late_count')[:5])
+            
+            # Prepare data for top performers
+            active_employees = User.objects.filter(is_active=True)
+            top_performers = []
+            
+            for employee in active_employees:
+                emp_attendances = attendances.filter(employee=employee)
+                total_days = emp_attendances.count()
+                if total_days > 0:
+                    present_days = emp_attendances.filter(
+                        status__in=['present', 'late', 'half_day']
+                    ).count()
+                    attendance_rate = round((present_days / total_days) * 100, 1)
+                    
+                    if attendance_rate >= 90:
+                        top_performers.append({
+                            'name': employee.get_full_name(),
+                            'initials': f"{employee.first_name[0]}{employee.last_name[0]}",
+                            'attendance_rate': attendance_rate,
+                            'total_days': total_days,
+                            'present_days': present_days
+                        })
+            
+            # Sort by attendance rate (descending) and limit to top 5
+            top_performers = sorted(top_performers, key=lambda x: x['attendance_rate'], reverse=True)[:5]
+            
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+            return redirect('attendance_report')
+    
+    # Prepare data for charts
+    late_employees_names = [
+        f"{emp['employee__first_name']} {emp['employee__last_name']}" 
+        for emp in late_employees
+    ] if late_employees else []
+    late_employees_counts = [emp['late_count'] for emp in late_employees] if late_employees else []
+    
+    context = {
+        'employees': employees,
+        'attendances': attendances,
+        'summary': summary,
+        'trend_dates': json.dumps(trend_dates) if 'trend_dates' in locals() else json.dumps([]),
+        'trend_present': json.dumps(trend_present) if 'trend_present' in locals() else json.dumps([]),
+        'trend_absent': json.dumps(trend_absent) if 'trend_absent' in locals() else json.dumps([]),
+        'late_employees_names': json.dumps(late_employees_names),
+        'late_employees_counts': json.dumps(late_employees_counts),
+        'top_performers': top_performers,
+    }
+    
+    return render(request, 'accounts/attendance_report.html', context)
+
+def export_attendance_report(request):
+    # Get the same filters from the request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    if not start_date or not end_date:
+        messages.error(request, "Please select date range first")
+        return redirect('attendance_report')
+    
+    try:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, "Invalid date format")
+        return redirect('attendance_report')
+    
+    # Create the HttpResponse object with CSV header
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="attendance_report_{start_date}_to_{end_date}.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write CSV header
+    writer.writerow([
+        'Employee Name', 'Date', 'Day', 'Status', 
+        'Check In', 'Check Out', 'Working Hours', 'Late Minutes'
+    ])
+    
+    # Get filtered data
+    attendances = Attendance.objects.filter(
+        date__range=[start_date, end_date]
+    ).select_related('employee').order_by('-date', 'employee__first_name')
+    
+    if 'employee' in request.GET and request.GET['employee']:
+        attendances = attendances.filter(employee_id=request.GET['employee'])
+        
+    if 'status' in request.GET and request.GET['status']:
+        attendances = attendances.filter(status=request.GET['status'])
+    
+    # Write data rows
+    for attendance in attendances:
+        # Calculate working hours
+        working_hours = ''
+        working_hours_delta = attendance.get_working_hours()
+        if working_hours_delta:
+            total_seconds = working_hours_delta.total_seconds()
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds % 3600) // 60)
+            working_hours = f"{hours:02d}:{minutes:02d}"
+        
+        # Calculate late minutes
+        late_minutes = ''
+        late_min = attendance.get_late_minutes()
+        if late_min is not None:
+            late_minutes = f"{late_min} mins"
+        
+        writer.writerow([
+            attendance.employee.get_full_name(),
+            attendance.date.strftime('%Y-%m-%d'),
+            attendance.date.strftime('%A'),
+            attendance.get_status_display(),
+            attendance.check_in.strftime('%H:%M') if attendance.check_in else '-',
+            attendance.check_out.strftime('%H:%M') if attendance.check_out else '-',
+            working_hours,
+            late_minutes
+        ])
+    
+    return response

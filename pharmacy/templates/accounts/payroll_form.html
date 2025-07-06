@@ -250,6 +250,39 @@
                     {{ form.tax|as_crispy_field }}
                 </div>
             </div>
+
+            <!-- Has Advance Field -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="checkbox">
+                        {{ form.has_advance }}
+                        <label for="{{ form.has_advance.id_for_label }}" class="form-check-label">
+                            {{ form.has_advance.label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advance Amount Field (conditional display) -->
+            <div class="col-md-6" id="advance-amount-group" style="display: none;">
+                <div class="form-group">
+                    {{ form.advance_amount|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Advance Date Field (conditional display) -->
+            <div class="col-md-6" id="advance-date-group" style="display: none;">
+                <div class="form-group">
+                    {{ form.advance_date|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Advance Reason Field (conditional display) -->
+            <div class="col-md-12" id="advance-reason-group" style="display: none;">
+                <div class="form-group">
+                    {{ form.advance_reason|as_crispy_field }}
+                </div>
+            </div>
             
             <!-- Net Salary Field -->
             <div class="col-md-6">
@@ -287,10 +320,17 @@
 
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                </svg>
+                Save
             </button>
             <a href="{% url 'payroll_list' %}" class="btn btn-outline">
-                <i class="bi bi-x"></i> Cancel
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Cancel
             </a>
         </div>
     </form>
@@ -298,6 +338,31 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Get references to advance fields
+        const hasAdvance = document.getElementById('id_has_advance');
+        const advanceAmountGroup = document.getElementById('advance-amount-group');
+        const advanceDateGroup = document.getElementById('advance-date-group');
+        const advanceReasonGroup = document.getElementById('advance-reason-group');
+        
+        // Function to toggle advance fields visibility
+        function toggleAdvanceFields() {
+            if (hasAdvance.checked) {
+                advanceAmountGroup.style.display = 'block';
+                advanceDateGroup.style.display = 'block';
+                advanceReasonGroup.style.display = 'block';
+            } else {
+                advanceAmountGroup.style.display = 'none';
+                advanceDateGroup.style.display = 'none';
+                advanceReasonGroup.style.display = 'none';
+            }
+        }
+        
+        // Initialize advance fields visibility
+        toggleAdvanceFields();
+        
+        // Add event listener to has_advance checkbox
+        hasAdvance.addEventListener('change', toggleAdvanceFields);
+        
         // Calculate net salary when values change
         function calculateNetSalary() {
             const basic = parseFloat(document.getElementById('id_basic_salary').value) || 0;
@@ -305,16 +370,19 @@
             const deductions = parseFloat(document.getElementById('id_deductions').value) || 0;
             const bonus = parseFloat(document.getElementById('id_bonus').value) || 0;
             const tax = parseFloat(document.getElementById('id_tax').value) || 0;
+            const hasAdvance = document.getElementById('id_has_advance').checked;
+            const advanceAmount = hasAdvance ? (parseFloat(document.getElementById('id_advance_amount').value) || 0) : 0;
             
-            const netSalary = basic + allowances + bonus - deductions - tax;
+            const netSalary = basic + allowances + bonus - deductions - tax - advanceAmount;
             document.getElementById('id_net_salary').value = netSalary.toFixed(2);
         }
         
         // Add event listeners to all relevant fields
-        ['basic_salary', 'allowances', 'deductions', 'bonus', 'tax'].forEach(field => {
+        ['basic_salary', 'allowances', 'deductions', 'bonus', 'tax', 'has_advance', 'advance_amount'].forEach(field => {
             const element = document.getElementById(`id_${field}`);
             if (element) {
                 element.addEventListener('input', calculateNetSalary);
+                element.addEventListener('change', calculateNetSalary);
             }
         });
         

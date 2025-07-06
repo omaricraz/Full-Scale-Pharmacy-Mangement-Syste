@@ -21,6 +21,10 @@ urlpatterns = [
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.product_update, name='product_update'),
     path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
+
+    path('reports/countries/', views.country_performance_report, name='country_performance_report'),
+    
+    
     
     # Batch URLs
     path('batches/', views.batch_list, name='batch_list'),
@@ -32,8 +36,12 @@ urlpatterns = [
     # Patient URLs
     path('patients/', views.patient_list, name='patient_list'),
     path('patients/create/', views.patient_create, name='patient_create'),
+    path('patients/<int:pk>/', views.patient_detail, name='patient_detail'),
     path('patients/<int:pk>/update/', views.patient_update, name='patient_update'),
     path('patients/<int:pk>/delete/', views.patient_delete, name='patient_delete'),
+
+    
+    
     
     # Prescription URLs
     path('prescriptions/', views.prescription_list, name='prescription_list'),
@@ -94,9 +102,11 @@ urlpatterns = [
     path('payments/<int:pk>/update/', views.payment_update, name='payment_update'),
     path('payments/<int:pk>/delete/', views.payment_delete, name='payment_delete'),
     
-    # Notifications
     path('notifications/', views.notification_list, name='notification_list'),
     path('notifications/<int:pk>/mark-read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/<int:pk>/delete/', views.notification_delete, name='notification_delete'),
+
     
     # Alert Rules
     path('alerts/rules/', views.alert_rules, name='alert_rules'),

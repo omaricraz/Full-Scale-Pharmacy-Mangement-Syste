@@ -114,6 +114,11 @@
         color: var(--info-color);
     }
 
+    .badge-advance {
+        background-color: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+
     .table-actions {
         display: flex;
         gap: 0.5rem;
@@ -172,6 +177,35 @@
         font-family: monospace;
     }
 
+    .advance-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .advance-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 200px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        text-align: center;
+        border-radius: 6px;
+        padding: 0.5rem;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .advance-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
     @media (max-width: 768px) {
         .payroll-header {
             flex-direction: column;
@@ -182,18 +216,55 @@
         .table-actions {
             justify-content: flex-start;
         }
+        
+        .payroll-table thead {
+            display: none;
+        }
+        
+        .payroll-table, .payroll-table tbody, .payroll-table tr, .payroll-table td {
+            display: block;
+            width: 100%;
+        }
+        
+        .payroll-table tr {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .payroll-table td {
+            text-align: right;
+            padding-left: 50%;
+            position: relative;
+        }
+        
+        .payroll-table td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 1rem;
+            width: calc(50% - 1rem);
+            padding-right: 1rem;
+            text-align: left;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .table-actions {
+            justify-content: flex-end;
+        }
     }
 </style>
 
 <div class="payroll-container">
     <div class="payroll-header">
         <h1 class="payroll-title">Payroll Records</h1>
-        <a href="{% url 'payroll_create' %}" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-            </svg>
-            Add Payroll
-        </a>
+        <div>
+            <a href="{% url 'payroll_create' %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Add Payroll
+            </a>
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -205,6 +276,7 @@
                     <th class="text-end">Basic Salary</th>
                     <th class="text-end">Allowances</th>
                     <th class="text-end">Deductions</th>
+                    <th class="text-end">Advance</th>
                     <th class="text-end">Net Salary</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
@@ -213,13 +285,33 @@
             <tbody>
                 {% for payroll in payrolls %}
                 <tr>
-                    <td>{{ payroll.employee.get_full_name }}</td>
-                    <td>{{ payroll.month|date:"F Y" }}</td>
-                    <td class="text-end currency">{{ payroll.basic_salary|floatformat:2 }}</td>
-                    <td class="text-end currency">{{ payroll.allowances|floatformat:2 }}</td>
-                    <td class="text-end currency">{{ payroll.deductions|floatformat:2 }}</td>
-                    <td class="text-end currency">{{ payroll.net_salary|floatformat:2 }}</td>
-                    <td>
+                    <td data-label="Employee">{{ payroll.employee.get_full_name }}</td>
+                    <td data-label="Month">{{ payroll.month|date:"F Y" }}</td>
+                    <td class="text-end currency" data-label="Basic Salary">{{ payroll.basic_salary|floatformat:2 }}</td>
+                    <td class="text-end currency" data-label="Allowances">{{ payroll.allowances|floatformat:2 }}</td>
+                    <td class="text-end currency" data-label="Deductions">{{ payroll.deductions|floatformat:2 }}</td>
+                    <td class="text-end" data-label="Advance">
+                        {% if payroll.has_advance %}
+                        <div class="advance-tooltip">
+                            <span class="badge badge-advance">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                                </svg>
+                                {{ payroll.advance_amount|floatformat:2 }}
+                            </span>
+                            <span class="tooltip-text">
+                                <strong>Advance Details:</strong><br>
+                                Amount: {{ payroll.advance_amount|floatformat:2 }}<br>
+                                Date: {{ payroll.advance_date|date:"M d, Y" }}<br>
+                                Reason: {{ payroll.advance_reason|default:"None" }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end currency" data-label="Net Salary">{{ payroll.net_salary|floatformat:2 }}</td>
+                    <td data-label="Status">
                         {% if payroll.is_paid %}
                         <span class="badge badge-paid">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
@@ -237,7 +329,7 @@
                         </span>
                         {% endif %}
                     </td>
-                    <td class="table-actions">
+                    <td class="table-actions" data-label="Actions">
                         <a href="{% url 'payroll_update' payroll.pk %}" class="btn btn-sm btn-edit" title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
@@ -253,7 +345,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="empty-state">
+                    <td colspan="9" class="empty-state">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
                             <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
@@ -266,4 +358,27 @@
         </table>
     </div>
 </div>
+
+<script>
+// document.addEventListener('DOMContentLoaded', function() {
+//     // Make table rows clickable (except when clicking on actions)
+//     document.querySelectorAll('.payroll-table tbody tr').forEach(row => {
+//         row.addEventListener('click', (e) => {
+//             // Don't navigate if clicking on action buttons or tooltip
+//             if (e.target.closest('.table-actions') || e.target.closest('.advance-tooltip')) {
+//                 return;
+//             }
+            
+//             // Find the edit link and navigate to it
+//             const editLink = row.querySelector('a[title="Edit"]');
+//             if (editLink) {
+//                 window.location.href = editLink.href;
+//             }
+//         });
+        
+//         // Add hover effect
+//         row.style.cursor = 'pointer';
+//     });
+// });
+</script>
 {% endblock %}

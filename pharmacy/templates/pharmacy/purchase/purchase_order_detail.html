@@ -331,6 +331,32 @@
             gap: 1rem;
         }
     }
+    .product-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.product-name {
+    font-weight: 500;
+}
+
+.product-origin {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.2);
+    vertical-align: middle;
+}
 </style>
 
 <div class="po-container">
@@ -418,6 +444,7 @@
                 <thead>
                     <tr>
                         <th>Product</th>
+                        <th>Made in</th>
                         <th>Quantity</th>
                         <th>Unit Price</th>
                         <th>Total</th>
@@ -429,6 +456,21 @@
                     {% for item in items %}
                     <tr>
                         <td>{{ item.product.name }}</td>
+                        <td>
+    <div class="product-cell">
+        {% if item.product.made_in %}
+        <div class="product-origin">
+            <span class="country-flag" title="{{ item.product.made_in.name }}">
+                <img src="https://flagcdn.com/16x12/{{ item.product.made_in.code|lower }}.png" 
+                     width="16"
+                     height="12"
+                     alt="{{ item.product.made_in.code }}">
+                {{ item.product.made_in.code|upper }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</td>
                         <td>{{ item.quantity }}</td>
                         <td>${{ item.unit_price|floatformat:2 }}</td>
                         <td>${{ item.total_price|floatformat:2 }}</td>

@@ -148,6 +148,21 @@
         width: 16px;
         height: 16px;
     }
+    .badge-country {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(59, 131, 246, 0.258);
+    color: var(--info-color);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+}
+
+.badge-country .icon {
+    width: 12px;
+    height: 12px;
+}
 
     @media (max-width: 768px) {
         .batch-header {
@@ -161,6 +176,16 @@
             overflow-x: auto;
         }
     }
+    .country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.5);
+}
 </style>
 
 <div class="batch-container">
@@ -180,6 +205,7 @@
             <thead>
                 <tr>
                     <th>Product</th>
+                    <th>Made in</th>
                     <th>Batch Number</th>
                     <th>Expiry Date</th>
                     <th>Quantity</th>
@@ -191,6 +217,21 @@
                 {% for batch in batches %}
                 <tr>
                     <td>{{ batch.product.name }}</td>
+                    <td>
+    {% if batch.product.made_in %}
+        <span class="country-flag" title="{{ batch.product.made_in.name }}">
+            <img src="https://flagcdn.com/16x12/{{ batch.product.made_in.code|lower }}.png" 
+                 srcset="https://flagcdn.com/32x24/{{ batch.product.made_in.code|lower }}.png 2x,
+                         https://flagcdn.com/48x36/{{ batch.product.made_in.code|lower }}.png 3x"
+                 width="16"
+                 height="12"
+                 alt="{{ batch.product.made_in.name }}">
+            {{ batch.product.made_in.code|upper }}
+        </span>
+    {% else %}
+        -
+    {% endif %}
+</td>
                     <td>{{ batch.batch_number }}</td>
                     <td>{{ batch.expiry_date|date:"Y-m-d" }}</td>
                     <td>{{ batch.quantity }}</td>

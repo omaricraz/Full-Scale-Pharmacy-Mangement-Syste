@@ -120,6 +120,52 @@ def category_delete(request, pk):
 def product_list(request):
     products = Product.objects.all()
     return render(request, 'pharmacy/product/product_list.html', {'products': products})
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, F
+from django.shortcuts import render
+from django_countries import countries
+
+from .models import Product  # Adjust import based on your app structure
+
+@login_required
+def most_popular_by_country(request):
+    selected_country = request.GET.get('country')
+    selected_country_name = None
+    top_products = []
+
+    if selected_country:
+        # Get the readable country name from the code
+        selected_country_name = dict(countries).get(selected_country, selected_country)
+
+        # Get top 10 most sold products from the selected country
+        top_products = Product.objects.filter(
+            made_in=selected_country
+        ).annotate(
+            total_sold=Sum('saleitem__quantity'),
+            total_revenue=Sum(
+                F('saleitem__quantity') * (F('saleitem__unit_price') - F('saleitem__discount'))
+            )
+        ).filter(
+            total_sold__gt=0
+        ).order_by('-total_sold')[:10]
+
+        # Add readable country name to each product (optional for UI)
+        for product in top_products:
+            product.made_in_name = dict(countries).get(product.made_in, product.made_in)
+
+    # List all distinct countries that have at least one product
+    product_countries = Product.objects.exclude(made_in__isnull=True).values_list('made_in', flat=True).distinct()
+    available_countries = [(code, name) for code, name in countries if code in product_countries]
+
+    context = {
+        'selected_country': selected_country,
+        'selected_country_name': selected_country_name,
+        'top_products': top_products,
+        'countries': available_countries,
+    }
+
+    return render(request, 'pharmacy/product/most_country.html', context)
+
 
 @login_required
 def product_detail(request, pk):
@@ -232,6 +278,17 @@ def batch_delete(request, pk):
 def patient_list(request):
     patients = Patient.objects.all()
     return render(request, 'pharmacy/patient/patient_list.html', {'patients': patients})
+
+def patient_detail(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    prescriptions = Prescription.objects.filter(patient=patient).order_by('-date_prescribed')
+    
+    context = {
+        'patient': patient,
+        'prescriptions': prescriptions,
+    }
+    return render(request, 'pharmacy/patient/patient_detail.html', context)
+
 
 @login_required
 def patient_create(request):
@@ -898,38 +955,36 @@ def stock_adjustment_create(request):
                 with transaction.atomic():
                     adjustment = form.save(commit=False)
                     adjustment.adjusted_by = request.user
-                    
+
                     if adjustment.batch:
-                        # Validate adjustment won't make quantity negative
+                        # Ensure the new stock quantity is not negative
                         new_quantity = adjustment.batch.quantity + adjustment.quantity
                         if new_quantity < 0:
                             messages.error(request, 'Adjustment would result in negative stock!')
                             return redirect('stock_adjustment_create')
-                        
+
                         adjustment.batch.quantity = new_quantity
                         adjustment.batch.save()
-                    
+
                     adjustment.save()
-                    
-                    # Create notification if stock is critically low
+
+                    # Check for low stock and notify if needed
                     if (adjustment.batch and 
                         adjustment.batch.product.get_stock_quantity() <= adjustment.batch.product.min_stock_level):
                         Notification.objects.create(
                             title=f'Low Stock: {adjustment.batch.product.name}',
                             message=f'{adjustment.batch.product.name} is below minimum stock level after adjustment.',
                             notification_type='low_stock',
-                            related_object_id=adjustment.batch.product.id,
-                            related_content_type='product',
                             recipient=request.user
                         )
-                    
+
                     messages.success(request, 'Stock adjustment recorded!')
                     return redirect('stock_adjustment_list')
             except Exception as e:
                 messages.error(request, f'Error recording adjustment: {str(e)}')
     else:
         form = StockAdjustmentForm()
-    
+
     return render(request, 'pharmacy/inventory/stock_adjustment_form.html', {
         'form': form,
         'title': 'Create Stock Adjustment'
@@ -1281,6 +1336,25 @@ def notification_mark_read(request, pk):
     notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
     notification.is_read = True
     notification.save()
+    
+    # Redirect to notification URL if exists, otherwise to notification list
+    if notification.url:
+        return redirect(notification.url)
+    return redirect('notification_list')
+
+@login_required
+def notification_delete(request, pk):
+    notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    if request.method == 'POST':
+        notification.delete()
+        messages.success(request, 'Notification deleted successfully.')
+    return redirect('notification_list')
+
+@login_required
+def mark_all_notifications_read(request):
+    if request.method == 'POST':
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        messages.success(request, "All notifications marked as read")
     return redirect('notification_list')
 
 # Alert Rule Views
@@ -1363,5 +1437,149 @@ def ajax_product_batches(request, product_id):
 
 
 
+
+
+from django.db.models import Sum, Count, F, FloatField, ExpressionWrapper, Avg
+from django.db.models.functions import Coalesce
+from django_countries import countries
+from datetime import date, timedelta
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Product, SaleItem  # Replace 'your_app' with your actual app name
+
+@login_required
+def country_performance_report(request):
+    # Get time period (default to 90 days)
+    days = int(request.GET.get('days', 90))
+    start_date = date.today() - timedelta(days=days)
+    
+    # Get previous period for comparison
+    prev_start_date = start_date - timedelta(days=days)
+    
+    # Get all countries with products
+    product_countries = Product.objects.exclude(made_in__isnull=True).values_list('made_in', flat=True).distinct()
+    available_countries = [(code, name) for code, name in countries if code in product_countries]
+    
+    # Get top countries by revenue
+    top_countries_data = (
+        Product.objects
+        .filter(saleitem__sale__date__gte=start_date)
+        .exclude(made_in__isnull=True)
+        .values('made_in')
+        .annotate(
+            revenue=Sum(F('saleitem__quantity') * (F('saleitem__unit_price') - F('saleitem__discount'))),
+            units_sold=Sum('saleitem__quantity'),
+            product_count=Count('id', distinct=True),
+            avg_margin=ExpressionWrapper(
+                Coalesce(
+                    Avg(
+                        (F('saleitem__unit_price') - F('saleitem__discount') - F('cost_price')) / 
+                        F('cost_price') * 100
+                    ),
+                    0
+                ),
+                output_field=FloatField()
+            )
+        )
+        .order_by('-revenue')[:5]
+    )
+    
+    # Get top products for each country
+    top_countries = []
+    for country_data in top_countries_data:
+        country_code = country_data['made_in']
+        country_name = dict(countries).get(country_code, country_code)
+        
+        top_products = (
+            Product.objects
+            .filter(made_in=country_code, saleitem__sale__date__gte=start_date)
+            .annotate(
+                units_sold=Sum('saleitem__quantity')
+            )
+            .order_by('-units_sold')[:3]
+        )
+        
+        top_countries.append({
+            'code': country_code,
+            'name': country_name,
+            'revenue': country_data['revenue'] or 0,
+            'units_sold': country_data['units_sold'] or 0,
+            'avg_margin': country_data['avg_margin'],
+            'product_count': country_data['product_count'],
+            'top_products': top_products
+        })
+    
+    # Get top country
+    top_country = top_countries[0] if top_countries else None
+    
+    # Calculate growth for top country
+    top_country_growth = None
+    top_country_revenue_growth = None
+    top_country_product_growth = None
+    
+    if top_country:
+        # Revenue growth
+        prev_revenue = (
+            Product.objects
+            .filter(made_in=top_country['code'], saleitem__sale__date__gte=prev_start_date, saleitem__sale__date__lt=start_date)
+            .aggregate(
+                revenue=Sum(F('saleitem__quantity') * (F('saleitem__unit_price') - F('saleitem__discount')))
+            )['revenue'] or 0
+        )
+        
+        if prev_revenue > 0:
+            top_country_revenue_growth = round(
+                ((top_country['revenue'] - prev_revenue) / prev_revenue * 100), 1  # Fixed missing parenthesis
+            )
+        
+        # Product count growth
+        prev_product_count = Product.objects.filter(
+            made_in=top_country['code'],
+            created_at__lt=start_date
+        ).count()
+        
+        if prev_product_count > 0:
+            top_country_product_growth = round(
+                ((top_country['product_count'] - prev_product_count) / prev_product_count * 100), 1
+            )
+    
+    # Prepare data for chart
+    chart_countries = (
+        Product.objects
+        .filter(saleitem__sale__date__gte=start_date)
+        .exclude(made_in__isnull=True)
+        .values('made_in')
+        .annotate(
+            revenue=Sum(F('saleitem__quantity') * (F('saleitem__unit_price') - F('saleitem__discount'))),
+            units_sold=Sum('saleitem__quantity')
+        )
+        .order_by('-revenue')[:10]
+    )
+    
+    country_names = []
+    country_revenues = []
+    country_units_sold = []
+    
+    for item in chart_countries:
+        country_names.append(dict(countries).get(item['made_in'], item['made_in']))
+        country_revenues.append(float(item['revenue'] or 0))
+        country_units_sold.append(item['units_sold'] or 0)
+    
+    context = {
+        'top_country': top_country,
+        'top_country_revenue': top_country['revenue'] if top_country else 0,
+        'top_country_revenue_growth': top_country_revenue_growth,
+        'top_country_product_count': top_country['product_count'] if top_country else 0,
+        'top_country_product_growth': top_country_product_growth,
+        'top_country_growth': top_country_growth,
+        'top_countries': top_countries,
+        'country_count': len(available_countries),
+        'country_names': country_names,
+        'country_revenues': country_revenues,
+        'country_units_sold': country_units_sold,
+        'country_count_growth': None,  # Could implement similar to above
+    }
+    
+    return render(request, 'pharmacy/reports/country_performance.html', context)
 
 

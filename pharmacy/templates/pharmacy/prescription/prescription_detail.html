@@ -147,6 +147,22 @@
         border-radius: 9999px;
     }
 
+    .badge-country {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info-color);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+}
+
+.badge-country .icon {
+    width: 12px;
+    height: 12px;
+}
+
     .badge-success {
         background-color: rgba(46, 200, 166, 0.2);
         color: var(--success-color);
@@ -293,6 +309,21 @@
             gap: 1rem;
         }
     }
+
+    .country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 9999px;
+    font-size: 0.85rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
 </style>
 
 <div class="prescription-container">
@@ -350,7 +381,7 @@
                 <div class="info-label">Status</div>
                 <div class="info-value">
                     <span class="badge 
-                        {% if prescription.status == 'filled' %}badge-success
+                        {% if prescription.status == 'completed' %}badge-success
                         {% elif prescription.status == 'pending' %}badge-warning
                         {% elif prescription.status == 'partially_filled' %}badge-info
                         {% else %}badge-danger{% endif %}">
@@ -386,6 +417,7 @@
                 <thead>
                     <tr>
                         <th>Product</th>
+                        <th>Made in</th>
                         <th>Quantity</th>
                         <th>Dosage</th>
                         <th>Duration</th>
@@ -397,6 +429,21 @@
                     {% for item in items %}
                     <tr>
                         <td>{{ item.product }}</td>
+                        <td>
+    {% if item.product.made_in %}
+    <span class="country-flag" title="{{ item.product.made_in.name }}">
+        <img src="https://flagcdn.com/16x12/{{ item.product.made_in.code|lower }}.png" 
+        srcset="https://flagcdn.com/32x24/{{ item.product.made_in.code|lower }}.png 2x,
+        https://flagcdn.com/48x36/{{ item.product.made_in.code|lower }}.png 3x"
+        width="16"
+        height="12"
+        alt="{{ item.product.made_in.name }}">
+        {{ item.product.made_in.code|upper }}
+    </span>
+    {% else %}
+    -
+    {% endif %}
+</td>
                         <td>{{ item.quantity }}</td>
                         <td>{{ item.dosage }}</td>
                         <td>{{ item.duration }}</td>

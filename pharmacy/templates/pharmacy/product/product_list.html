@@ -120,6 +120,11 @@
         color: var(--text-secondary);
     }
 
+    .badge-country {
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #6366f1;
+    }
+
     .table-actions {
         display: flex;
         gap: 0.5rem;
@@ -163,6 +168,16 @@
         width: 16px;
         height: 16px;
     }
+    .country-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.country-flag img {
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.5);
+}
 
     @media (max-width: 768px) {
         .product-list-header {
@@ -178,8 +193,18 @@
 </style>
 
 <div class="product-list-container">
-    <div class="product-list-header">
-        <h2 class="product-list-title">Product Inventory</h2>
+<div class="product-list-header">
+    <h2 class="product-list-title">Product Inventory</h2>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{% url 'country_performance_report' %}" class="btn btn-primary" style="background-color: #6366f1;">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            Country Report
+        </a>
         <a href="{% url 'product_create' %}" class="btn btn-primary">
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -189,6 +214,7 @@
             Add Product
         </a>
     </div>
+</div>
 
     <div class="table-responsive">
         <table class="product-table">
@@ -198,6 +224,7 @@
                     <th>Generic Name</th>
                     <th>Category</th>
                     <th>Type</th>
+                    <th>Made in</th>
                     <th>Cost Price</th>
                     <th>Selling Price</th>
                     <th>Stock</th>
@@ -212,6 +239,21 @@
                     <td>{{ product.generic_name|default:"-" }}</td>
                     <td>{{ product.category|default:"-" }}</td>
                     <td>{{ product.get_product_type_display }}</td>
+                    <td>
+    {% if product.made_in %}
+        <span class="country-flag" title="{{ product.made_in.name }}">
+            <img src="https://flagcdn.com/16x12/{{ product.made_in.code|lower }}.png" 
+                 srcset="https://flagcdn.com/32x24/{{ product.made_in.code|lower }}.png 2x,
+                         https://flagcdn.com/48x36/{{ product.made_in.code|lower }}.png 3x"
+                 width="16"
+                 height="12"
+                 alt="{{ product.made_in.name }}">
+            {{ product.made_in.code|upper }}
+        </span>
+    {% else %}
+        -
+    {% endif %}
+</td>
                     <td>${{ product.cost_price }}</td>
                     <td>${{ product.selling_price }}</td>
                     <td>
@@ -294,7 +336,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="9" class="empty-state">
+                    <td colspan="10" class="empty-state">
                         <svg class="icon" style="width: 48px; height: 48px; margin-bottom: 1rem;"
                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
