@@ -171,6 +171,33 @@
         color: var(--accent-color);
     }
 
+    .customer-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .customer-toggle-btn {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .customer-toggle-btn.active {
+        border-color: var(--accent-color);
+        background-color: rgba(46, 200, 166, 0.1);
+    }
+
+    .customer-toggle input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
     .form-actions {
         display: flex;
         justify-content: space-between;
@@ -224,6 +251,19 @@
     .btn-success:hover {
         background-color: #3bc973;
         transform: translateY(-1px);
+    }
+
+    .change-display {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .change-positive {
+        color: var(--success-color);
+    }
+
+    .change-negative {
+        color: var(--error-color);
     }
 
     @media (max-width: 768px) {
@@ -296,6 +336,26 @@
             {% csrf_token %}
             
             <div class="form-group">
+                <label>Customer Type</label>
+                <div class="customer-toggle">
+                    <input type="radio" id="walkin" name="customer_type" value="walkin" checked>
+                    <label for="walkin" class="customer-toggle-btn active">
+                        <i class="fas fa-user"></i> Walk-in Customer
+                    </label>
+                    
+                      <div class="form-group">
+                        <label for="id_patient ">Patient</label>
+                        {{ form.patient }}
+                    </div>
+                </div>
+                
+                <div id="patient-field" style="display: none;">
+                    <label for="id_customer">Select Patient</label>
+                    {{ form.customer }}
+                </div>
+            </div>
+            
+            <div class="form-group">
                 <label for="id_payment_method">Payment Method</label>
                 <div class="payment-methods">
                     <div class="payment-method">
@@ -326,12 +386,10 @@
                 <label for="id_amount_tendered">Amount Tendered</label>
                 <input type="number" class="form-control" id="id_amount_tendered" 
                        name="amount_tendered" step="0.01" min="0" 
-                       placeholder="Enter amount received" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="id_customer">Customer (Optional)</label>
-                {{ form.customer }}
+                       value="{{ total_amount }}" required>
+                <div class="change-display" id="change-display">
+                    Change: $0.00
+                </div>
             </div>
             
             <div class="form-group">
@@ -359,7 +417,7 @@
     $(document).ready(function() {
         // Select2 for Customer field
         $('#id_customer').select2({
-            placeholder: "Select a customer (optional)",
+            placeholder: "Select a patient",
             allowClear: true,
             width: '100%',
             dropdownParent: $('.checkout-container')
@@ -368,17 +426,38 @@
         // Auto-focus amount tendered field
         $('#id_amount_tendered').focus();
         
-        // Calculate change if amount tendered is entered
+        // Calculate change when amount tendered changes
         $('#id_amount_tendered').on('input', function() {
             const total = parseFloat({{ total_amount }});
             const tendered = parseFloat($(this).val()) || 0;
             const change = tendered - total;
             
             if (change >= 0) {
-                $(this).css('border-color', '#4ade80');
+                $('#change-display').text('Change: $' + change.toFixed(2));
+                $('#change-display').removeClass('change-negative').addClass('change-positive');
+                $(this).removeClass('is-invalid').addClass('is-valid');
             } else {
-                $(this).css('border-color', '#ff6b6b');
+                $('#change-display').text('Amount due: $' + Math.abs(change).toFixed(2));
+                $('#change-display').removeClass('change-positive').addClass('change-negative');
+                $(this).removeClass('is-valid').addClass('is-invalid');
             }
+        });
+        
+        // Toggle patient field based on customer type
+        $('input[name="customer_type"]').change(function() {
+            if ($(this).val() === 'patient') {
+                $('#patient-field').show();
+                $('#id_customer').prop('required', true);
+            } else {
+                $('#patient-field').hide();
+                $('#id_customer').prop('required', false);
+            }
+        });
+        
+        // Toggle button styling
+        $('.customer-toggle-btn').click(function() {
+            $('.customer-toggle-btn').removeClass('active');
+            $(this).addClass('active');
         });
         
         // Animation for complete sale button

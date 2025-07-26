@@ -312,7 +312,7 @@ def leave_list(request):
 @login_required
 def leave_create(request):
     if request.method == 'POST':
-        form = LeaveForm(request.POST, user=request.user)
+        form = LeaveForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             leave = form.save(commit=False)
             if request.user.role != 'admin':

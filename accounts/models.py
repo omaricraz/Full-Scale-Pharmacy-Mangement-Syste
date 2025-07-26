@@ -314,18 +314,14 @@ class Leave(models.Model):
         """Calculate the duration of leave in days"""
         return (self.end_date - self.start_date).days + 1
     
-    def save(self, *args, **kwargs):
-        # Set payment status based on leave type
-        if self.leave_type in ['unpaid', 'compensatory']:
-            self.payment_status = 'not_applicable'
-        elif self.status == 'approved' and self.leave_type not in ['unpaid', 'compensatory']:
-            self.payment_status = 'pending'
-        
-        # Require medical certificate for sick leaves and maternity leaves
-        if (self.leave_type.startswith('sick_') or self.leave_type.startswith('maternity')) and not self.medical_certificate:
-            raise ValidationError("Medical certificate is required for this leave type")
-        
-        super().save(*args, **kwargs)
+def save(self, *args, **kwargs):
+    # Set payment status based on leave type
+    if self.leave_type in ['unpaid', 'compensatory']:
+        self.payment_status = 'not_applicable'
+    elif self.status == 'approved' and self.leave_type not in ['unpaid', 'compensatory']:
+        self.payment_status = 'pending'
+    
+    super().save(*args, **kwargs)
     
     def calculate_leave_deduction(self):
         """Calculate the amount to be deducted for this leave"""

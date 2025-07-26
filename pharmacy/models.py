@@ -111,16 +111,12 @@ class Product(models.Model):
         return result['total'] if result['total'] is not None else 0
     
     def get_stock_info(self):
-        stock_qty = self.get_stock_quantity()
-        batches = self.batches.filter(
-            quantity__gt=0,
-            expiry_date__gt=date.today()
-        ).order_by('expiry_date')
-        
+        total_quantity = self.batches.aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
+
         return {
-            'total': stock_qty,
-            'batch_count': batches.count(),
-            'batches': batches
+            'total_quantity': total_quantity
         }
     
     @property

@@ -373,12 +373,12 @@
                     Generate
                 </button>
                 {% if request.GET.generate %}
-                <button type="submit" name="export" value="csv" class="btn btn-outline">
+                <!-- <button type="submit" name="export" value="csv" class="btn btn-outline">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="mr-1">
                         <path d="M8.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1zM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-1A1.5 1.5 0 0 0 7 1.5v1H2.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H11z"/>
                     </svg>
                     Ex CSV
-                </button>
+                </button> -->
                 {% endif %}
             </div>
         </form>
@@ -400,10 +400,10 @@
                     <div class="summary-card-title">Average Order Value</div>
                     <div class="summary-card-value">${{ average_order_value|floatformat:2 }}</div>
                 </div>
-                <div class="summary-card">
+                <!-- <div class="summary-card">
                     <div class="summary-card-title">Highest Sale</div>
                     <div class="summary-card-value">${{ highest_sale|floatformat:2 }}</div>
-                </div>
+                </div> -->
             </div>
 
             <div class="trend-container">
